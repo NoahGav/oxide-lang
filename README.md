@@ -302,3 +302,49 @@ to express code more concisely, reducing verbosity and providing a clean and
 precise representation of functions, conditional statements, and error handling.
 Oxide's `=>` syntax contributes to a more efficient and expressive coding
 experience, ultimately making the language more developer-friendly.
+
+# 8. Example
+
+### 8.1 Example with explicit error handling (? operator).
+
+```oxide
+// main.ox
+
+use std; // This imports the std namespace.
+
+@derive(Debug); // This automatically implements the Debug trait for type Foo.
+type Foo (
+    bar: i32,
+);
+
+// This implements the add method for type Foo.
+fn Foo.add(self, rhs: i32) -> Self
+    => Self(bar: self.bar + rhs);
+
+// The ? return type means that the main function may return an error (but not a value).
+fn main() -> ? {
+    let foo = Foo(bar: 41) + 1; // This works because Foo properly implements the Add trait.
+    
+    // io is from the std namespace. since we imported it, we do
+    // not have to use the fully-qualified name (std::io::println).
+    io::println(`{foo:?}`)?; // The ? operator propagates any errors returned by println (if there was one).
+}
+```
+
+### 8.2 Example with implicit error handling (try block).
+
+```oxide
+// main.ox
+
+...
+
+// Since we might not want to handle the errors in the main function, we can use an arrow body
+// instead and wrap the whole function in a try block.
+fn main() -> ? => try {
+    let foo = Foo(bar: 41) + 1;
+
+    // As you can see, we do not need the ? operator
+    // here as it is inside a try block.
+    io::println(`{foo:?}`);
+}; // We need a semicolon because a try block is a statement.
+```
