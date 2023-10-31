@@ -1122,6 +1122,6 @@ other than having the same name (tbh, it's a fairly generic rust related name).
 
 # Changes
 
-### 1. Gc Field Access Propagte Error
+### 1. Gc Field Access Should Propagate Error
 
 Accessing a field on the Gc type should propagate the error upwards. This way you don't have to handle the (unlikely) error every time.
