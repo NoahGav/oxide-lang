@@ -43,7 +43,7 @@ a fully-fledged language development project (or stay just an idea).
     - [6.2 The ? Operator](#62-the---operator)
     - [6.3 @bail Macro](#63--bail-macro)
     - [6.4 Custom Error Types](#64-custom-error-types)
-    - [6.5 Implicit Error Handling](#65-implicit-error-handling)
+    - [6.5 Explicit Error Handling](#65-explicit-error-handling)
     - [6.6 try { ... } Blocks](#66-try------blocks)
       - [Note](#note)
     - [6.7 Pattern Matching on the Error Trait](#67-pattern-matching-on-the-error-trait)
@@ -366,7 +366,7 @@ trait. This flexibility empowers developers to create tailored error types for
 specific use cases, improving error handling precision. This can be done using
 the @derive(Error); macro.
 
-### 6.5 Implicit Error Handling
+### 6.5 Explicit Error Handling
 
 Oxide encourages explicit error handling by design. Functions returning T? and
 the ? operator make it clear that error handling is a natural part of the code.
