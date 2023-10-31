@@ -180,7 +180,7 @@ The try { ... } blocks provide a convenient syntax to implicitly apply the ?
 operator to all expressions that possibly contain an error within a block. This
 simplifies error handling when multiple operations may return T?.
 
-```oxide
+```rust
 let result = try {
     let value = potentially_failing_operation(); // The ? is not required here.
     value + 42
@@ -194,7 +194,7 @@ trait for them. These custom error types can be pattern matched for specific
 error handling. This example illustrates the creation of a custom error type and
 pattern matching:
 
-```oxide
+```rust
 @derive(Error);
 type MyError(
     description: string;
@@ -218,7 +218,7 @@ simplifying error handling and making your code more readable.
 
 The `??` operator is used as follows:
 
-```oxide
+```rust
 let value = some_operation() ?? fallback_value;
 ```
 
@@ -247,14 +247,14 @@ The `??` operator offers several benefits:
 
 Here are some examples of how to use the `??` operator in Oxide:
 
-```oxide
+```rust
 let value = potentially_failing_operation() ?? 0;
 ```
 
 In this example, if `potentially_failing_operation()` encounters an error, the
 `??` operator replaces the error with the value `0`.
 
-```oxide
+```rust
 let value = fetch_data() ?? load_default_data();
 ```
 
@@ -293,7 +293,7 @@ In Oxide, it allows developers to express these statements without the need for
 When defining functions with single expressions as their bodies, the `=>` syntax
 becomes a powerful tool for concise code. For example:
 
-```oxide
+```rust
 fn add(a: i32, b: i32) -> i32 => a + b;
 ```
 
@@ -306,7 +306,7 @@ providing a more precise and clean representation.
 The `=>` syntax can be employed to simplify conditional statements, such as `if`
 and `else` expressions.
 
-```oxide
+```rust
 if condition => do_something();
 else => do_something_else();
 ```
@@ -321,7 +321,7 @@ The `=>` syntax also plays a role in error handling. For functions that don't
 care fo explicitly handling errors, wrapping the entire function body in a `try`
 block is a common practice.
 
-```oxide
+```rust
 fn do_something() -> T? => try {
     ... // We don't have to worry about any errors in this block.
 };
@@ -345,7 +345,7 @@ experience, ultimately making the language more developer-friendly.
 
 ### 8.1 Example with explicit error handling (? operator).
 
-```oxide
+```rust
 // main.ox
 
 use std; // This imports the std namespace.
@@ -371,7 +371,7 @@ fn main() -> ? {
 
 ### 8.2 Example with implicit error handling (try block).
 
-```oxide
+```rust
 // main.ox
 
 ...
@@ -385,4 +385,18 @@ fn main() -> ? => try {
     // here as it is inside a try block.
     io::println(`{foo:?}`);
 }; // We need a semicolon because a try block is a statement.
+```
+
+### 8.3 Example of handling a specific error (using trait pattern matching).
+
+```rust
+fn main() -> ? {
+    let file = std::fs::open("./example.txt");
+
+    if let Err(FileDoesntExist(path)) = file {
+        std::io::println(`The file {path} does not exist.`)?;
+    } else {
+        // Do something with the file.
+    }
+}
 ```
