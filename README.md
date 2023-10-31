@@ -87,6 +87,7 @@ a fully-fledged language development project (or stay just an idea).
   - [13.2 Concurrency](#132-concurrency)
   - [13.3 Macro Code Generation](#133-macro-code-generation)
   - [13.4 Namespaces](#134-namespaces)
+  - [13.5 String Interpolation](#135-string-interpolation)
 
 # 1. Implicit Lifetime Handling in Oxide
 
@@ -1017,4 +1018,27 @@ namespace Example;
 
 // pub(this) means that Foo is public only to this project.
 pub(this) type Foo;
+```
+
+### 13.5 String Interpolation
+
+I want string interpolation to be a built-in construct in oxide (instead of the
+format! macro). It will likely use the `` tokens. The way it works is fairly
+simple. When you want to interpolate a value, you simply do:
+
+```rust
+// This is a string interpolation. It doesn't necessarily
+// return a string, but instead works with a formatter.
+`The value is {value}.`
+```
+
+To provide formatting options, you simply separate the value and options by the
+":" token.
+
+```rust
+`The value is {value:options}.`
+
+// For example, if you want to format with the Debug trait instead...
+
+`The value is {value:?}.` // The ? option signifies the use of the Debug trait, instead of the Display trait.
 ```
