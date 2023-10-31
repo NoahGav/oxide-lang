@@ -1106,3 +1106,6 @@ fn main() -> ? {
     std::io::println(`1 + 2 = {add(1, 2)}`)?;
 }
 ```
+
+Other potential names for the attribute includes `@propagate` (maybe
+`@propagate(Error)` to make it more generic?) ...
