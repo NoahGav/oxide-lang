@@ -1,3 +1,24 @@
+# Oxide: A New Rust-Inspired Language
+
+### Your Feedback Matters
+
+Oxide is a personal project that takes inspiration from the principles discussed
+in "Notes on a Smaller Rust" and its follow-up, "Revisiting a 'smaller Rust'".
+It aims to explore a new language design that simplifies and optimizes the
+development process while inheriting Rust's best qualities.
+
+I'm excited to share this early Oxide specification with you and seek your
+thoughts, criticisms, and feedback. Your input is invaluable as it will help
+shape the future of Oxide. Whether you're interested in contributing to the
+development of the language, have suggestions, or simply want to express your
+thoughts, I welcome your participation.
+
+### Goal
+
+Feel free to explore the specification and let me know your insights. Your
+feedback will play a vital role in determining whether Oxide should progress to
+a fully-fledged language development project (or stay just an idea).
+
 - [1. Implicit Lifetime Handling in Oxide](#1-implicit-lifetime-handling-in-oxide)
   - [1.1 Eliminating Explicit Lifetime Annotations](#11-eliminating-explicit-lifetime-annotations)
   - [1.2 Ban on Returning References from Functions](#12-ban-on-returning-references-from-functions)
