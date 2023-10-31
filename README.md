@@ -764,7 +764,6 @@ fn main() { let mut compiler = Compiler::new();
     let model = snapshot.get_semantic_model();
 
     println!("{:#?}", model);
-
 }
 ```
 
