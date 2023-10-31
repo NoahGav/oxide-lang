@@ -85,6 +85,7 @@ a fully-fledged language development project (or stay just an idea).
 - [13. Final Thoughts](#13-final-thoughts)
   - [13.1 Structs in Oxide](#131-structs-in-oxide)
   - [13.2 Concurrency](#132-concurrency)
+  - [13.3 Macro Code Generation](#133-macro-code-generation)
 
 # 1. Implicit Lifetime Handling in Oxide
 
@@ -951,3 +952,33 @@ know). I don't really want the language to have async/await. I was thinking of
 something closer to go with green threads. I was also possibly thinking about
 the actor-model instead (maybe the entry point of the program would be an actor
 instead of the main method?).
+
+### 13.3 Macro Code Generation
+
+I was thinking that Oxide could implement something similar to the quote crate.
+It would be built-in and developed alongside the language. It would allow for
+the dynamic creating of code at compile-time while still be statically checked
+by the compiler to be a valid code transformation. For example,
+
+```rust
+// This macro does not replace the input Type, but instead
+// generates a Method for it at compile-time. Also, remember
+// that the Type object contains the full semantic information
+// about the Type itself. It's not just a token stream.
+@marco();
+fn some_macro(type: Type) -> Method {
+    @code {
+        fn (#type.ident).foo(&self) -> Bar {
+            // ...
+        }
+    }
+}
+```
+
+This example isn't meant to be correct or represent what it would actually be
+like to create a macro like this in oxide. Instead, it's just meant to be a
+general idea on how it could work.
+
+Also, I'd like to point out that macros would somehow need to be compiled and
+run at compile-time. This could potentially be done using wasm like I envisioned
+for compiler plugins.
