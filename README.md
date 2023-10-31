@@ -162,7 +162,17 @@ Oxide introduces the @impl(Trait); attribute to address scenarios where multiple
 traits may have methods with interfering signatures. This attribute allows
 developers to specify the trait to which a method implementation belongs,
 resolving potential conflicts and ensuring precise trait behavior for each trait
-a type implements.
+a type implements. For example,
+
+```rust
+type Foo;
+
+@impl(Display);
+fn Foo.fmt(&self, f: &mut Formatter) -> ? { ... }
+
+@impl(Debug);
+fn Foo.fmt(&self, f: &mut Formatter) -> ? { ... }
+```
 
 # 3. Unified Approach to Data Allocation
 
