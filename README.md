@@ -708,9 +708,6 @@ not necessarily imply that the type can implement `Copy`. The `Copy` trait is
 reserved for data types that are implicitly cloned on move, ensuring that they
 behave consistently with other `Copy` types.
 
-This revision should accurately represent the relationship between `Copy` and
-`Clone` traits in Oxide.
-
 ### 10.3 Simplified Data Sharing
 
 The distinction between `Copy` and `Clone` traits in Oxide contributes to more
