@@ -381,6 +381,13 @@ fields of `T` in `RefCell` or `RwLock`, depending on whether `Gc<T>` is used in
 a single-threaded or multi-threaded context. This automatic interior mutability
 management ensures that concurrent access to shared data remains safe.
 
+When accessing fields from `Gc<T>`, Oxide returns a `F?` instead of `F`, where
+`F` represents the type of the field. This design choice reflects the shared
+ownership of the data and the fact that Oxide cannot guarantee, at compile-time,
+adherence to the "aliasing xor mutable" rule. Instead, runtime mechanisms handle
+error checking, and any operation on a field may potentially return an error (of
+type `F?`) if the borrow checking rules are violated.
+
 ### 8.3 Cyclic Garbage Collection in `Gc<T>`
 
 `Gc<T>` employs a reference counting mechanism to keep track of shared
