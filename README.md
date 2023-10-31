@@ -932,3 +932,11 @@ fn main() {
     foo(bar: 42);
 }
 ```
+
+### 13.2 Concurrency
+
+I totally forgot to even mention concurrency (mainly because I don't really
+know). I don't really want the language to have async/await. I was thinking of
+something closer to go with green threads. I was also possibly thinking about
+the actor-model instead (maybe the entry point of the program would be an actor
+instead of the main method?).
