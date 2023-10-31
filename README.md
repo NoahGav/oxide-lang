@@ -536,7 +536,7 @@ readable and less verbose.
 ### 8.4 Error Handling Precision
 
 The `=>` syntax also plays a role in error handling. For functions that don't
-care fo explicitly handling errors, wrapping the entire function body in a `try`
+care to explicitly handling errors, wrapping the entire function body in a `try`
 block is a common practice.
 
 ```rust
