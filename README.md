@@ -127,7 +127,109 @@ developers to create custom code generators and extensions with ease. The use of
 compile-time reflection objects enhances the robustness of macros and simplifies
 the code generation process, making it a standout feature of the language.
 
-# 5. Error Handling in Oxide
+# 5. Algebraic Types (Tagged Unions)
+
+In Oxide, algebraic types, commonly referred to as tagged unions, provide a
+powerful and flexible mechanism for defining complex data structures that can
+have multiple shapes or variants. These types, although conceptually similar to
+Rust's enums, are designed with the aim of enhancing code expressiveness and
+simplifying data modeling.
+
+### 5.1 Defining Algebraic Types
+
+Defining algebraic types in Oxide is straightforward, allowing you to declare a
+type with multiple variants using a syntax that is reminiscent of Rust. The
+syntax provides an intuitive way to specify these variants and their associated
+data. Algebraic types can be declared as follows:
+
+```rust
+type EnumName =
+    Variant1 |
+    Variant2 |
+    Variant3(Foo) |
+    Variant4(bar: Bar);
+```
+
+- `EnumName` is the name of the algebraic type.
+- `Variant1`, `Variant2`, `Variant3`, and `Variant4` are the possible variants
+  of the type.
+- Variants can include associated data, like `Variant3(Foo)` and
+  `Variant4(bar: Bar)`. This allows you to attach additional information to a
+  variant when necessary.
+
+### 5.2 Pattern Matching
+
+Pattern matching on algebraic types in Oxide is nearly identical to Rust,
+offering a familiar and powerful way to handle different variants. Pattern
+matching allows developers to write code that responds to the shape of data,
+making it an essential tool for data processing and control flow.
+
+Here is an example of pattern matching in Oxide:
+
+```rust
+fn process_enum(enum_val: EnumName) => match enum_val {
+    Variant1 => {
+        // Handle Variant1
+    }
+    Variant2 => {
+        // Handle Variant2
+    }
+    Variant3(foo) => {
+        // Handle Variant3 with associated data `foo`
+    }
+    Variant4 { bar } => {
+        // Handle Variant4 with associated data `bar`
+    }
+};
+```
+
+Pattern matching enables developers to inspect and process data based on its
+variant, making it a powerful tool for working with algebraic types.
+
+### 5.3 Use Cases for Algebraic Types
+
+Algebraic types are particularly valuable when modeling data with different
+shapes or behaviors. They can represent a variety of scenarios, such as:
+
+- Representing different states of an application or system.
+
+- Modeling data with variable structures, such as nodes in a tree or items in a
+  document.
+
+- Defining error types with different error codes and associated data.
+
+- Handling complex parsing or transformation tasks by distinguishing between
+  various forms or structures.
+
+By allowing for clear and concise modeling of these scenarios, algebraic types
+contribute to improved code readability and maintainability in Oxide. They are a
+fundamental feature for creating data structures that can adapt to different
+situations in a clean and expressive manner.
+
+### 5.4 Benefits of Algebraic Types
+
+The use of algebraic types in Oxide offers several benefits:
+
+- **Code Clarity**: Algebraic types make the code more self-explanatory by
+  clearly defining the possible shapes of data.
+
+- **Type Safety**: Pattern matching ensures that you handle all possible
+  variants, reducing the risk of unexpected behaviors.
+
+- **Flexible Data Modeling**: They allow you to create data structures that can
+  evolve with changing requirements without extensive code modifications.
+
+- **Error Handling**: Algebraic types provide an elegant way to model and handle
+  errors, making error management more structured and predictable.
+
+- **Readable and Maintainable Code**: By modeling data with algebraic types, you
+  create code that is easier to understand, modify, and maintain.
+
+Algebraic types, as tagged unions, contribute to Oxide's aim of providing a
+reliable and efficient language while maintaining simplicity and expressiveness
+in code development.
+
+# 6. Error Handling in Oxide
 
 ## Introduction
 
@@ -137,16 +239,14 @@ management. This formal specification outlines the various techniques and
 features Oxide offers to handle errors effectively while ensuring code safety
 and reliability.
 
-### T? and the ? Operator
-
-#### 5.1 Result Type (T?)
+### 6.1 Result Type (T?)
 
 In Oxide, error handling begins with the use of the T? type, which signifies the
 potential for errors. Functions that may produce errors return a T?, where T is
 the result type. This standardized approach ensures clear and explicit error
 signaling.
 
-#### 5.2 The ? Operator
+### 6.2 The ? Operator
 
 The ? operator is a central element of Oxide's error handling mechanism. It
 allows functions to handle errors without panicking. When applied to an
@@ -154,27 +254,27 @@ expression, the ? operator checks for errors and either returns the error or
 unwraps the value, depending on the outcome. This enables systematic error
 propagation.
 
-#### 5.3 @bail Macro
+### 6.3 @bail Macro
 
 The @bail macro simplifies the process of returning an error from within a
 function. It provides a convenient shortcut for returning an error at any point
 in the code, enhancing the manageability of exceptional cases.
 
-#### 5.4 Custom Error Types
+### 6.4 Custom Error Types
 
 Oxide allows developers to define custom error types by implementing the Error
 trait. This flexibility empowers developers to create tailored error types for
 specific use cases, improving error handling precision. This can be done using
 the @derive(Error); macro.
 
-#### 5.5 Implicit Error Handling
+### 6.5 Implicit Error Handling
 
 Oxide encourages explicit error handling by design. Functions returning T? and
 the ? operator make it clear that error handling is a natural part of the code.
 This approach minimizes the potential for unexpected runtime panics and promotes
 safer and more controlled error management.
 
-#### 5.6 try { ... } Blocks
+### 6.6 try { ... } Blocks
 
 The try { ... } blocks provide a convenient syntax to implicitly apply the ?
 operator to all expressions that possibly contain an error within a block. This
@@ -205,7 +305,7 @@ let value = try {
 }?;
 ```
 
-#### 5.7 Pattern Matching on the Error Trait
+### 6.7 Pattern Matching on the Error Trait
 
 Oxide allows developers to create custom error types and implement the Error
 trait for them. These custom error types can be pattern matched for specific
@@ -225,14 +325,14 @@ fn handle_error(error: Error) {
 }
 ```
 
-### 6. The `??` Operator
+# 7. The `??` Operator
 
 The `??` operator in Oxide introduces a powerful and concise way to handle
 errors by replacing them with alternative values. This operator is especially
 useful when you want to provide a default or fallback value in case of errors,
 simplifying error handling and making your code more readable.
 
-#### 6.1 Usage
+### 7.1 Usage
 
 The `??` operator is used as follows:
 
@@ -247,7 +347,7 @@ In this expression:
 - If `some_operation()` encounters an error, the `??` operator replaces the
   error with the `fallback_value`.
 
-#### 6.2 Benefits
+### 7.2 Benefits
 
 The `??` operator offers several benefits:
 
@@ -261,7 +361,7 @@ The `??` operator offers several benefits:
   extensive error-checking code when you don't care about the error and can
   provide a sensible fallback.
 
-#### 6.3 Examples
+### 7.3 Examples
 
 Here are some examples of how to use the `??` operator in Oxide:
 
@@ -291,7 +391,7 @@ empowers developers to create more robust and maintainable code while avoiding
 unexpected runtime errors. Oxide's approach to error management is simple, yet
 powerful, making it a valuable tool for application development.
 
-# 7. The `=>` Syntax in Oxide
+# 8. The `=>` Syntax in Oxide
 
 ## Introduction
 
@@ -300,13 +400,13 @@ streamline code blocks that can be represented as single expressions. This
 formal specification provides an overview of the `=>` syntax and its
 applications, enhancing code precision and readability.
 
-### 7.1 Single Expression Statements
+### 8.1 Single Expression Statements
 
 The primary use of the `=>` syntax is to simplify single-expression statements.
 In Oxide, it allows developers to express these statements without the need for
 `{}` block delimiters.
 
-#### 7.2 Function Definitions
+### 8.2 Function Definitions
 
 When defining functions with single expressions as their bodies, the `=>` syntax
 becomes a powerful tool for concise code. For example:
@@ -319,7 +419,7 @@ In this case, the entire function body consists of a single expression
 (`a + b`). The `=>` syntax eliminates the need for explicit `{}` blocks,
 providing a more precise and clean representation.
 
-#### 7.3 Conditional Statements
+### 8.3 Conditional Statements
 
 The `=>` syntax can be employed to simplify conditional statements, such as `if`
 and `else` expressions.
@@ -333,7 +433,7 @@ Here, the `if` and `else` branches are single expressions (`do_something()` and
 `do_something_else()`). The `=>` syntax streamlines the code, making it more
 readable and less verbose.
 
-#### 7.4 Error Handling Precision
+### 8.4 Error Handling Precision
 
 The `=>` syntax also plays a role in error handling. For functions that don't
 care fo explicitly handling errors, wrapping the entire function body in a `try`
@@ -359,13 +459,13 @@ precise representation of functions, conditional statements, and error handling.
 Oxide's `=>` syntax contributes to a more efficient and expressive coding
 experience, ultimately making the language more developer-friendly.
 
-# 8. Garbage-Collecting Shared References in Oxide
+# 9. Garbage-Collecting Shared References in Oxide
 
 Oxide introduces a built-in type called `Gc<T>` that simplifies managing shared
 references with built-in cyclic garbage collection. This section provides an
 overview of `Gc<T>` and its advantages in handling shared data efficiently.
 
-### 8.1 The `Gc<T>` Type
+### 9.1 The `Gc<T>` Type
 
 `Gc<T>` stands for "Garbage-Collected" and is a reference-counted smart pointer
 that facilitates sharing data across multiple parts of your Oxide application.
@@ -373,7 +473,7 @@ It provides a concurrent reference counting mechanism that allows you to share
 data efficiently while mitigating the risk of memory leaks caused by circular
 references.
 
-### 8.2 Automatic Interior Mutability
+### 9.2 Automatic Interior Mutability
 
 One of the primary features of `Gc<T>` is its ability to manage interior
 mutability. When a type `T` is wrapped in `Gc<T>`, Oxide implicitly wraps the
@@ -388,7 +488,7 @@ adherence to the "aliasing xor mutable" rule. Instead, runtime mechanisms handle
 error checking, and any operation on a field may potentially return an error (of
 type `F?`) if the borrow checking rules are violated.
 
-### 8.3 Cyclic Garbage Collection in `Gc<T>`
+### 9.3 Cyclic Garbage Collection in `Gc<T>`
 
 `Gc<T>` employs a reference counting mechanism to keep track of shared
 references and ensure proper memory management. When the reference count for a
@@ -397,7 +497,7 @@ references exist. However, the responsibility for releasing memory associated
 with `Gc<T>` is shared between reference counting and a cyclic garbage
 collection mechanism.
 
-#### 8.3.1 Reference Counting
+#### 9.3.1 Reference Counting
 
 Reference counting in `Gc<T>` effectively tracks the number of active references
 to shared data. It precisely increases the count when new references are created
@@ -411,7 +511,7 @@ This immediate memory release ensures that Oxide applications efficiently manage
 memory when references are no longer needed, without introducing any delay in
 the process.
 
-#### 8.3.2 Cyclic Garbage Collection
+#### 9.3.2 Cyclic Garbage Collection
 
 While reference counting efficiently manages individual references, it cannot
 detect circular references within a group of `Gc<T>` objects. To address this,
@@ -428,14 +528,14 @@ The combination of reference counting and cyclic garbage collection in `Gc<T>`
 provides a comprehensive and reliable memory management strategy, ensuring that
 your Oxide application remains both efficient and free from memory leaks.
 
-### 8.4 Using `Gc<T>` in Oxide
+### 9.4 Using `Gc<T>` in Oxide
 
 To use `Gc<T>`, you can wrap a type `T` using `Gc::new()`. Once wrapped, you can
 seamlessly pass `Gc<T>` across different parts of your Oxide application. It
 allows for sharing data without the complexity of lifetime management, offering
 a straightforward solution for shared data scenarios.
 
-### 8.5 Implementation of the Copy Trait
+### 9.5 Implementation of the Copy Trait
 
 In Oxide, the `Gc` type implements the `Copy` trait. This means that `Gc`
 instances are implicitly cloned when moved, and their reference counts are
@@ -443,7 +543,7 @@ increased accordingly. The `Copy` trait ensures that `Gc` behaves consistently
 with other `Copy` types in the language, providing a convenient and efficient
 way to handle reference counting for shared data.
 
-### 8.6 Example
+### 9.6 Example
 
 Here's a simple example of using `Gc<T>` to share data in Oxide:
 
@@ -468,14 +568,14 @@ With `Gc<T>`, Oxide streamlines shared data handling and ensures your
 application remains memory-efficient and free from common issues related to
 shared data management.
 
-# 9. The Copy Trait in Oxide
+# 10. The Copy Trait in Oxide
 
 In Oxide, the `Copy` trait is a fundamental concept governing the behavior of
 types when they are moved. Unlike Rust, where the `Copy` trait means that a type
 can be directly duplicated through memory copying (e.g., `memcpy`), Oxide
 interprets the `Copy` trait differently.
 
-### 9.1 Implicit Cloning on Move
+### 10.1 Implicit Cloning on Move
 
 In Oxide, a type marked as `Copy` doesn't necessarily support low-level memory
 copying but indicates a different behavior. When you move a `Copy` type, Oxide
@@ -486,7 +586,7 @@ that changes to one instance of the value do not affect others, allowing
 developers to work with data efficiently while maintaining the integrity of the
 original.
 
-### 9.2 Interactions with the Clone Trait
+### 10.2 Interactions with the Clone Trait
 
 In Oxide, when implementing the `Copy` trait, there's no need for explicit
 `Clone` trait implementations; developers can use `@derive(Clone)` for
@@ -503,7 +603,7 @@ behave consistently with other `Copy` types.
 This revision should accurately represent the relationship between `Copy` and
 `Clone` traits in Oxide.
 
-### 9.3 Simplified Data Sharing
+### 10.3 Simplified Data Sharing
 
 The distinction between `Copy` and `Clone` traits in Oxide contributes to more
 straightforward data sharing. By understanding the implicit cloning behavior of
@@ -512,9 +612,9 @@ without the need for manual cloning operations. Oxide's approach to the `Copy`
 trait streamlines data handling, promoting efficient and reliable code
 development.
 
-# 10. Examples
+# 11. Examples
 
-### 10.1 Error Handling
+### 11.1 Error Handling
 
 ```rust
 // main.ox, explicit error handling with ? operator.
@@ -570,14 +670,14 @@ fn main() -> ? {
 }
 ```
 
-# 11. IDE and Tooling Support
+# 12. IDE and Tooling Support
 
 Oxide is designed not only with the language itself in mind but also with robust
 tooling and development environments. Its official compiler, found under the
 "oxide-lang::compiler" module, provides a straightforward and efficient API for
 developers, enabling the creation of powerful IDEs and various tools.
 
-### 11.1 The Oxide Compiler API
+### 12.1 The Oxide Compiler API
 
 The Oxide Compiler API allows developers to interact with the compiler
 programmatically, making it a valuable tool for building integrated development
@@ -630,7 +730,7 @@ the compiler and the rich semantic models provided by the snapshots enable IDEs
 to offer real-time feedback and enhance the development experience for Oxide
 users.
 
-### 11.2 Compiler Plugins
+### 12.2 Compiler Plugins
 
 A fundamental feature of the Oxide language is the support for compiler plugins
 or extensions. These plugins, similar to popular tools like Vite and Webpack for
@@ -653,7 +753,7 @@ This approach has several advantages:
   capabilities of Oxide for various development and deployment scenarios, from
   optimizing code to customizing build pipelines.
 
-### 11.3 Versatile Tooling
+### 12.3 Versatile Tooling
 
 With a robust compiler API and support for compiler plugins, the Oxide language
 encourages the development of versatile tooling. IDEs, code linters, formatters,
