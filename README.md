@@ -367,7 +367,7 @@ overview of `Gc<T>` and its advantages in handling shared data efficiently.
 
 ### 8.1 The `Gc<T>` Type
 
-`Gc<T>` stands for "Garbage-Collector" and is a reference-counted smart pointer
+`Gc<T>` stands for "Garbage-Collected" and is a reference-counted smart pointer
 that facilitates sharing data across multiple parts of your Oxide application.
 It provides a concurrent reference counting mechanism that allows you to share
 data efficiently while mitigating the risk of memory leaks caused by circular
