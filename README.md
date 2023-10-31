@@ -90,6 +90,7 @@ a fully-fledged language development project (or stay just an idea).
   - [13.5 String Interpolation](#135-string-interpolation)
   - [13.6 Arithmetic](#136-arithmetic)
     - [Note](#note-2)
+  - [13.7 Oxide Scripting Language](#137-oxide-scripting-language)
 
 # 1. Implicit Lifetime Handling in Oxide
 
@@ -1109,3 +1110,9 @@ fn main() -> ? {
 
 Other potential names for the attribute includes `@propagate` (maybe
 `@propagate(Error)` to make it more generic?) ...
+
+### 13.7 Oxide Scripting Language
+
+I just realized that there was a project called "oxide-lang" that was a
+scripting language inspired by rust. This project has nothing to do with that
+other than having the same name (tbh, it's a fairly generic rust related name).
