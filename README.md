@@ -1096,4 +1096,13 @@ something). For example,
 // this function should be implicitly bubbled to the return of the callee.
 @bubbles();
 fn add(a: i32, b: i32) -> i32? => a + b;
+
+fn main() -> ? {
+    // As you can see in this example, I do not use the ? operator
+    // after the add function call. The reason is that the error
+    // automatically bubbles up to the return type of the function.
+    // This is why main returns ? (other than the println function
+    // also potentially returning an error).
+    std::io::println(`1 + 2 = {add(1, 2)}`)?;
+}
 ```
