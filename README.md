@@ -375,9 +375,10 @@ safer and more controlled error management.
 
 ### 6.6 try { ... } Blocks
 
-The try { ... } blocks provide a convenient syntax to implicitly apply the ?
-operator to all expressions that possibly contain an error within a block. This
-simplifies error handling when multiple operations may return T?.
+The try { ... } block provides a convenient syntax to implicitly apply the ?
+operator to all expressions that possibly contain an error within the block.
+This simplifies error handling when multiple operations may return an error, but
+you don't want to handle them all individually.
 
 ```rust
 let result = try {
