@@ -23,8 +23,8 @@ references of the same type are passed to a function, Oxide simplifies this
 scenario by disallowing functions to return references. For instance, in Rust, a
 function like:
 
-```oxide
-fn foo(a: &T, b: &T, c: &T) -> &T { // ... }
+```rust
+fn foo(a: &T, b: &T, c: &T) -> &T { ... }
 ```
 
 Presents challenges for the compiler to determine which reference's lifetime
