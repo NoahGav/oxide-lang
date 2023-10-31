@@ -551,6 +551,14 @@ adherence to the "aliasing xor mutable" rule. Instead, runtime mechanisms handle
 error checking, and any operation on a field may potentially return an error (of
 type `F?`) if the borrow checking rules are violated.
 
+#### Note
+
+Although accessing the fields of a `Gc<T>` returns `F?` (due to the inability to
+do compile-time borrow checking), regular static borrow checking continues from
+there. Since the compiler can determine that the borrow of a field from a
+`Gc<T>` was valid due to no error being returned, it can continue to do regular
+static borrow checking to ensure valid usage of the borrowed field `f`.
+
 ### 9.3 Cyclic Garbage Collection in `Gc<T>`
 
 `Gc<T>` employs a reference counting mechanism to keep track of shared
