@@ -85,3 +85,71 @@ providing systematic and standardized error handling techniques, the language
 empowers developers to create more robust and maintainable code while avoiding
 unexpected runtime errors. Oxide's approach to error management is simple, yet
 powerful, making it a valuable tool for application development.
+
+# The `=>` Syntax in Oxide
+
+## Introduction
+
+Oxide introduces the `=>` syntax as a convenient and expressive feature to
+streamline code blocks that can be represented as single expressions. This
+formal specification provides an overview of the `=>` syntax and its
+applications, enhancing code precision and readability.
+
+### 1. Single Expression Statements
+
+The primary use of the `=>` syntax is to simplify single-expression statements.
+In Oxide, it allows developers to express these statements without the need for
+`{}` block delimiters.
+
+#### 1.1. Function Definitions
+
+When defining functions with single expressions as their bodies, the `=>` syntax
+becomes a powerful tool for concise code. For example:
+
+```oxide
+fn add(a: i32, b: i32) -> i32 => a + b;
+```
+
+In this case, the entire function body consists of a single expression
+(`a + b`). The `=>` syntax eliminates the need for explicit `{}` blocks,
+providing a more precise and clean representation.
+
+#### 1.2. Conditional Statements
+
+The `=>` syntax can be employed to simplify conditional statements, such as `if`
+and `else` expressions.
+
+```oxide
+if condition => do_something();
+else => do_something_else();
+```
+
+Here, the `if` and `else` branches are single expressions (`do_something()` and
+`do_something_else()`). The `=>` syntax streamlines the code, making it more
+readable and less verbose.
+
+### 2. Error Handling Precision
+
+The `=>` syntax also plays a role in error handling. For functions that don't
+care fo explicitly handling errors, wrapping the entire function body in a `try`
+block is a common practice.
+
+```oxide
+fn do_something() -> T? => try {
+    ... // We don't have to worry about any errors in this block.
+};
+```
+
+In this example, the `try` block serves as the statement body, ensuring that
+error handling is handled implicitly. The `=>` syntax allows developers to
+create precise error-handling functions without the need for additional `{}`
+blocks.
+
+## Conclusion
+
+The `=>` syntax in Oxide offers a valuable tool for enhancing code precision and
+readability. By simplifying single-expression statements, it allows developers
+to express code more concisely, reducing verbosity and providing a clean and
+precise representation of functions, conditional statements, and error handling.
+Oxide's `=>` syntax contributes to a more efficient and expressive coding
+experience, ultimately making the language more developer-friendly.
