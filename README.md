@@ -569,3 +569,103 @@ fn main() -> ? {
     }
 }
 ```
+
+# 11. IDE and Tooling Support
+
+Oxide is designed not only with the language itself in mind but also with robust
+tooling and development environments. Its official compiler, found under the
+"oxide-lang::compiler" module, provides a straightforward and efficient API for
+developers, enabling the creation of powerful IDEs and various tools.
+
+### 11.1 The Oxide Compiler API
+
+The Oxide Compiler API allows developers to interact with the compiler
+programmatically, making it a valuable tool for building integrated development
+environments (IDEs) and other code-related applications. The API provides a
+simple yet comprehensive interface to analyze, manipulate, and work with Oxide
+source code. Here's a basic example of how to use the API:
+
+```rust
+use oxide_lang::compiler::{Compiler, Document};
+
+fn main() { let mut compiler = Compiler::new();
+
+    compiler.mutate(|state| {
+        state.add(Document::new(
+            "main.ox",
+            "fn main() -> ? { ... }",
+        });
+    });
+
+    let snapshot = compiler.snapshot();
+    let model = snapshot.get_semantic_model();
+
+    println!("{:#?}", model);
+
+}
+```
+
+Key features of the Oxide Compiler API include:
+
+#### **Incremental Compilation**
+
+The compiler is designed with incremental compilation in mind. It ensures that
+only the necessary parts of the code are analyzed and recomputed when changes
+are made, making it exceptionally fast. Snapshots, created from the compiler,
+provide access to semantic models, and they are both lazy and thread-safe.
+
+#### **Concurrency**
+
+The compiler API is designed with concurrency in mind. It allows for multiple
+snapshots to be queried concurrently. Older snapshots can coexist with newer
+ones, even while being queried in parallel. This level of concurrency and
+parallelism ensures that developers can build high-performance and efficient
+development tools.
+
+#### **IDE Integration**
+
+IDEs can leverage the Oxide Compiler API to offer features such as code
+analysis, autocompletion, error checking, and more. The incremental nature of
+the compiler and the rich semantic models provided by the snapshots enable IDEs
+to offer real-time feedback and enhance the development experience for Oxide
+users.
+
+### 11.2 Compiler Plugins
+
+A fundamental feature of the Oxide language is the support for compiler plugins
+or extensions. These plugins, similar to popular tools like Vite and Webpack for
+JavaScript, can extend the capabilities of the Oxide compiler. They can provide
+additional functionality for tasks like code optimization, bundling, and more.
+The unique aspect of Oxide's approach to compiler plugins is that they are
+compiled to WebAssembly (Wasm) and executed using the Wasmtime runtime.
+
+This approach has several advantages:
+
+- **Dynamic Compilation**: Compiler plugins can be dynamically executed at
+  compile-time. This dynamic nature allows for versatile and customizable build
+  processes without needing to modify the core compiler.
+
+- **Safety**: Plugins run in a WebAssembly sandbox, ensuring that they do not
+  have access to sensitive parts of the system. This approach enhances security
+  while offering extensibility.
+
+- **Versatility**: Compiler plugins enable the community to extend the
+  capabilities of Oxide for various development and deployment scenarios, from
+  optimizing code to customizing build pipelines.
+
+### 11.3 Versatile Tooling
+
+With a robust compiler API and support for compiler plugins, the Oxide language
+encourages the development of versatile tooling. IDEs, code linters, formatters,
+and project builders can be created or enhanced with ease. The incremental
+compilation and plugin system further empower tooling developers to offer
+efficient and feature-rich solutions for the Oxide ecosystem.
+
+Oxide's commitment to IDE and tooling support ensures that developers have the
+necessary tools to write, analyze, and deploy Oxide code efficiently. This
+approach not only simplifies the development process but also fosters a thriving
+ecosystem around the language.
+
+By providing a powerful and versatile compiler API and enabling dynamic compiler
+plugins, Oxide aims to support a wide range of developer needs and create a
+seamless development experience.
