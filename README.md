@@ -341,12 +341,12 @@ precise representation of functions, conditional statements, and error handling.
 Oxide's `=>` syntax contributes to a more efficient and expressive coding
 experience, ultimately making the language more developer-friendly.
 
-# 8. Example
+# 8. Examples
 
-### 8.1 Example with explicit error handling (? operator).
+### 8.1 Error Handling
 
 ```rust
-// main.ox
+// main.ox, explicit error handling with ? operator.
 
 use std; // This imports the std namespace.
 
@@ -369,10 +369,8 @@ fn main() -> ? {
 }
 ```
 
-### 8.2 Example with implicit error handling (try block).
-
 ```rust
-// main.ox
+// main.ox, implicit error handling with try block.
 
 ...
 
@@ -387,9 +385,9 @@ fn main() -> ? => try {
 }; // We need a semicolon because a try block is a statement.
 ```
 
-### 8.3 Example of handling a specific error (using trait pattern matching).
-
 ```rust
+// main.ox, handling a specific error (using trait pattern matching)
+
 fn main() -> ? {
     let file = std::fs::open("./example.txt");
 
