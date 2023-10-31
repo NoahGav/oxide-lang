@@ -3,7 +3,10 @@
 ### Your Feedback Matters
 
 Oxide is a personal project that takes inspiration from the principles discussed
-in "Notes on a Smaller Rust" and its follow-up, "Revisiting a 'smaller Rust'".
+in
+["Notes on a Smaller Rust"](https://boats.gitlab.io/blog/post/notes-on-a-smaller-rust/)
+and its follow-up,
+["Revisiting a 'smaller Rust'"](https://without.boats/blog/revisiting-a-smaller-rust/).
 It aims to explore a new language design that simplifies and optimizes the
 development process while inheriting Rust's best qualities.
 
