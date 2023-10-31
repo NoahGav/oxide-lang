@@ -187,6 +187,24 @@ let result = try {
 };
 ```
 
+#### Note
+
+try blocks do not propagate the errors upwards towards the return of the
+function. Instead, they propagate the error to the result of the try block
+expression. This means that a try block evaluates to T? and not T. If you do not
+want to handle the error produced by a try block, you could still use the ?
+operator.
+
+```rust
+// Because we use the ? operator, the error from the try block
+// is propagated to the return of the enclosing function. That's
+// why the variable is named value and not result.
+let value = try {
+    let value = potentially_failing_operation();
+    value + 42
+}?;
+```
+
 #### 5.7 Pattern Matching on the Error Trait
 
 Oxide allows developers to create custom error types and implement the Error
