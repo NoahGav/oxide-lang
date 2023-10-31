@@ -359,9 +359,155 @@ precise representation of functions, conditional statements, and error handling.
 Oxide's `=>` syntax contributes to a more efficient and expressive coding
 experience, ultimately making the language more developer-friendly.
 
-# 8. Examples
+# 8. Garbage-Collecting Shared References in Oxide
 
-### 8.1 Error Handling
+Oxide introduces a built-in type called `Gc<T>` that simplifies managing shared
+references with built-in cyclic garbage collection. This section provides an
+overview of `Gc<T>` and its advantages in handling shared data efficiently.
+
+### 8.1 The `Gc<T>` Type
+
+`Gc<T>` stands for "Garbage-Collector" and is a reference-counted smart pointer
+that facilitates sharing data across multiple parts of your Oxide application.
+It provides a concurrent reference counting mechanism that allows you to share
+data efficiently while mitigating the risk of memory leaks caused by circular
+references.
+
+### 8.2 Automatic Interior Mutability
+
+One of the primary features of `Gc<T>` is its ability to manage interior
+mutability. When a type `T` is wrapped in `Gc<T>`, Oxide implicitly wraps the
+fields of `T` in `RefCell` or `RwLock`, depending on whether `Gc<T>` is used in
+a single-threaded or multi-threaded context. This automatic interior mutability
+management ensures that concurrent access to shared data remains safe.
+
+### 8.3 Cyclic Garbage Collection in `Gc<T>`
+
+`Gc<T>` employs a reference counting mechanism to keep track of shared
+references and ensure proper memory management. When the reference count for a
+particular piece of shared data reaches zero, it indicates that no active
+references exist. However, the responsibility for releasing memory associated
+with `Gc<T>` is shared between reference counting and a cyclic garbage
+collection mechanism.
+
+#### 8.3.1 Reference Counting
+
+Reference counting in `Gc<T>` effectively tracks the number of active references
+to shared data. It precisely increases the count when new references are created
+and decreases it when references go out of scope or are no longer needed. When
+the reference count drops to zero, it indicates that the shared data has no
+active references. At this point, the object is freed immediately, and its
+associated `drop` method is called, adhering to the same reference counting
+principles as a regular reference-counted type.
+
+This immediate memory release ensures that Oxide applications efficiently manage
+memory when references are no longer needed, without introducing any delay in
+the process.
+
+#### 8.3.2 Cyclic Garbage Collection
+
+While reference counting efficiently manages individual references, it cannot
+detect circular references within a group of `Gc<T>` objects. To address this,
+Oxide incorporates a cyclic garbage collection mechanism. This collector is
+responsible for identifying and releasing memory associated with reference
+cycles.
+
+When cyclic references occur, the cyclic garbage collector identifies them and
+intervenes to free the memory. By doing so, it ensures that `Gc<T>` remains a
+memory-efficient solution for shared data management, even in the presence of
+complex reference relationships.
+
+The combination of reference counting and cyclic garbage collection in `Gc<T>`
+provides a comprehensive and reliable memory management strategy, ensuring that
+your Oxide application remains both efficient and free from memory leaks.
+
+### 8.4 Using `Gc<T>` in Oxide
+
+To use `Gc<T>`, you can wrap a type `T` using `Gc::new()`. Once wrapped, you can
+seamlessly pass `Gc<T>` across different parts of your Oxide application. It
+allows for sharing data without the complexity of lifetime management, offering
+a straightforward solution for shared data scenarios.
+
+### 8.5 Implementation of the Copy Trait
+
+In Oxide, the `Gc` type implements the `Copy` trait. This means that `Gc`
+instances are implicitly cloned when moved, and their reference counts are
+increased accordingly. The `Copy` trait ensures that `Gc` behaves consistently
+with other `Copy` types in the language, providing a convenient and efficient
+way to handle reference counting for shared data.
+
+### 8.6 Example
+
+Here's a simple example of using `Gc<T>` to share data in Oxide:
+
+```rust
+use std;
+
+@derive(Debug);
+type SharedData(value: i32);
+
+fn main() -> ? => try {
+    let shared = Gc::new(SharedData(value: 42));
+
+    std::io::println(`The shared value is {shared.value:?}`);
+};
+```
+
+In this example, `Gc::new()` wraps the `SharedData` type, and you can access its
+fields without needing to manage explicit borrows, thanks to the automatic
+interior mutability provided by `Gc<T>`.
+
+With `Gc<T>`, Oxide streamlines shared data handling and ensures your
+application remains memory-efficient and free from common issues related to
+shared data management.
+
+# 9. The Copy Trait in Oxide
+
+In Oxide, the `Copy` trait is a fundamental concept governing the behavior of
+types when they are moved. Unlike Rust, where the `Copy` trait means that a type
+can be directly duplicated through memory copying (e.g., `memcpy`), Oxide
+interprets the `Copy` trait differently.
+
+### 9.1 Implicit Cloning on Move
+
+In Oxide, a type marked as `Copy` doesn't necessarily support low-level memory
+copying but indicates a different behavior. When you move a `Copy` type, Oxide
+implicitly clones it instead of transferring ownership. This means that the
+original value remains intact and accessible in its original location, while a
+new copy of the value is created at the target location. This behavior ensures
+that changes to one instance of the value do not affect others, allowing
+developers to work with data efficiently while maintaining the integrity of the
+original.
+
+### 9.2 Interactions with the Clone Trait
+
+In Oxide, when implementing the `Copy` trait, there's no need for explicit
+`Clone` trait implementations; developers can use `@derive(Clone)` for
+convenience. However, it is important to note that the `Clone` trait is
+implicitly assumed to be implemented when defining `Copy`, as `Copy` relies on
+the cloning mechanism to perform implicit cloning during moves.
+
+It's important to emphasize that the reverse relationship does not apply. While
+a type can implement `Clone` and have the ability to clone explicitly, this does
+not necessarily imply that the type can implement `Copy`. The `Copy` trait is
+reserved for data types that are implicitly cloned on move, ensuring that they
+behave consistently with other `Copy` types.
+
+This revision should accurately represent the relationship between `Copy` and
+`Clone` traits in Oxide.
+
+### 9.3 Simplified Data Sharing
+
+The distinction between `Copy` and `Clone` traits in Oxide contributes to more
+straightforward data sharing. By understanding the implicit cloning behavior of
+`Copy` types on move, developers can manage shared data with minimal effort and
+without the need for manual cloning operations. Oxide's approach to the `Copy`
+trait streamlines data handling, promoting efficient and reliable code
+development.
+
+# 10. Examples
+
+### 10.1 Error Handling
 
 ```rust
 // main.ox, explicit error handling with ? operator.
