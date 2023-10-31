@@ -84,6 +84,7 @@ a fully-fledged language development project (or stay just an idea).
   - [12.3 Versatile Tooling](#123-versatile-tooling)
 - [13. Final Thoughts](#13-final-thoughts)
   - [13.1 Structs in Oxide](#131-structs-in-oxide)
+  - [13.2 Concurrency](#132-concurrency)
 
 # 1. Implicit Lifetime Handling in Oxide
 
