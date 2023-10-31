@@ -5,20 +5,44 @@ sacrificing safety. One key aspect of this approach is its implicit lifetime
 handling. Oxide borrows Rust's borrow checking mechanism but dispenses with the
 need for explicit lifetime annotations, making it more accessible to developers.
 
-### 1.1 Simplified Lifetime Management
+### 1.1 Eliminating Explicit Lifetime Annotations
 
-Borrow checking in Oxide ensures the safety and correctness of code by tracking
-the lifetimes of references without requiring developers to annotate these
-lifetimes explicitly. This feature results in cleaner and more concise code and
-reduces the cognitive burden of managing lifetimes.
+In Oxide, the handling of lifetimes is simplified by eliding all lifetimes, even
+within structs. This approach significantly simplifies lifetime management,
+eliminating the need for explicit annotations. While Rust theoretically supports
+elided lifetimes, Oxide embraces this feature more explicitly from the ground
+up. This means that lifetimes are automatically inferred and validated by the
+compiler, reducing the cognitive burden on developers.
 
-### 1.2 Optimized for Application Development
+### 1.2 Ban on Returning References from Functions
+
+To maintain clarity and simplicity while avoiding the complexity of explicit
+lifetimes, Oxide introduces a restriction on returning references from
+functions. While the Rust language encounters challenges when multiple `&`
+references of the same type are passed to a function, Oxide simplifies this
+scenario by disallowing functions to return references. For instance, in Rust, a
+function like:
+
+```oxide
+fn foo(a: &T, b: &T, c: &T) -> &T { // ... }
+```
+
+Presents challenges for the compiler to determine which reference's lifetime
+should be returned. Oxide circumvents this ambiguity by enforcing a ban on
+returning references from functions. However, references can still be returned
+in methods where the lifetime of the returned reference is guaranteed to be at
+least the same as the `&self` reference. This approach optimizes Oxide for
+application development and simplifies the codebase without sacrificing safety.
+
+### 1.3 Optimized for Application Development
 
 Oxide's approach to implicit lifetime handling is tailored for application
 development, offering the benefits of Rust's robust safety features while
 streamlining the coding process. This design choice optimizes Oxide for
 application development tasks, ensuring that developers can build reliable and
-efficient software with ease.
+efficient software with ease. This simplified lifetime management not only
+enhances code readability but also reduces the need for extensive error
+checking, making development in Oxide more intuitive and productive.
 
 # 2. Implicit Trait Implementation with Attribute Support
 
