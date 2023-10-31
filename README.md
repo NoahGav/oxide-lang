@@ -88,6 +88,8 @@ a fully-fledged language development project (or stay just an idea).
   - [13.3 Macro Code Generation](#133-macro-code-generation)
   - [13.4 Namespaces](#134-namespaces)
   - [13.5 String Interpolation](#135-string-interpolation)
+  - [13.6 Arithmetic](#136-arithmetic)
+    - [Note](#note-2)
 
 # 1. Implicit Lifetime Handling in Oxide
 
@@ -1041,4 +1043,57 @@ To provide formatting options, you simply separate the value and options by the
 // For example, if you want to format with the Debug trait instead...
 
 `The value is {value:?}.` // The ? option signifies the use of the Debug trait, instead of the Display trait.
+```
+
+### 13.6 Arithmetic
+
+Technically arithmetic in any language is inherently unsafe. This is due to the
+potential for overflows, underflows, loss of precision (although this might not
+count), ...
+
+I think the best way to account for this in Oxide (since it doesn't allow for
+panicking) is to make all arithmetic operations return T? (e.g. i32?), but for
+them to be implicitly returned from the function. This means, to do any math at
+all, the function must return T?. For example,
+
+```rust
+// Since a + b might overflow (or underflow),
+// the return type must be i32?.
+fn add(a: i32, b: i32) -> i32? => a + b;
+```
+
+Thankfully, if you don't want arithmetic to always bubble up to the return of a
+function, you can wrap it in a try block (like anything that returns an error).
+This allows you to break the arithmetic up and to potentially handle different
+types of errors. For example,
+
+```rust
+fn foo(a: i32, b: i32) -> i32 {
+    let result = try { a + b };
+
+    if let Err(error) = result {
+        if let IntegerOverflow = error {
+            // Do whatever on an integer overflow.    
+        }
+    } else {
+        // No error adding values.
+    }
+}
+```
+
+Normally, though you would just ignore the errors and let them automatically
+propagate up to the return of the function.
+
+#### Note
+
+There might be other operations that implicitly bubble the error up to the
+return. Potentially, it could even be a trait or something to allow other types
+of operations to do this. Or maybe a function attribute (like @bubbles or
+something). For example,
+
+```rust
+// The bubbles attribute tells the compiler that the error result of
+// this function should be implicitly bubbled to the return of the callee.
+@bubbles();
+fn add(a: i32, b: i32) -> i32? => a + b;
 ```
