@@ -1,4 +1,4 @@
-# Oxide: A New Rust-Inspired Language
+# Oxide: A Proposal for a New Rust-Inspired Language
 
 ### Your Feedback Matters
 
