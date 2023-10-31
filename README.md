@@ -197,19 +197,19 @@ with an enhanced level of control and expressiveness.
 
 In Oxide, macros are designed to resemble regular functions, simplifying their
 usage and making them more approachable. Rather than relying on token streams,
-macros take advantage of compile-time reflection objects, such as the Type
+macros take advantage of compile-time reflection objects, such as the `Type`
 object. This compilation-time data holds complete semantic information about the
 entire program, enabling tailored implementations that are both powerful and
 precise.
 
 ### 4.2 @derive(Trait, ...) Macro
 
-One of the standout examples of Oxide's macro capabilities is the @derive(Trait,
-...) macro. This macro is responsible for generating implementations of a
-specified trait for a given type. By leveraging the Type object, the @derive
-macro creates Method objects, representing the implementations of the trait for
-the type. This approach provides a level of detail and customization that is not
-possible with simplistic token streams.
+One of the standout examples of Oxide's macro capabilities is the
+`@derive(Trait, ...)` macro. This macro is responsible for generating
+implementations of a specified trait for a given type. By leveraging the `Type`
+object, the `@derive` macro creates `Method` objects, representing the
+implementations of the trait for the type. This approach provides a level of
+detail and customization that is not possible with simplistic token streams.
 
 ### 4.3 Incremental Computation
 
