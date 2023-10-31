@@ -62,6 +62,7 @@ a fully-fledged language development project (or stay just an idea).
 - [9. Garbage-Collecting Shared References in Oxide](#9-garbage-collecting-shared-references-in-oxide)
   - [9.1 The `Gc<T>` Type](#91-the--gc-t---type)
   - [9.2 Automatic Interior Mutability](#92-automatic-interior-mutability)
+    - [Note](#note-1)
   - [9.3 Cyclic Garbage Collection in `Gc<T>`](#93-cyclic-garbage-collection-in--gc-t--)
     - [9.3.1 Reference Counting](#931-reference-counting)
     - [9.3.2 Cyclic Garbage Collection](#932-cyclic-garbage-collection)
@@ -81,6 +82,8 @@ a fully-fledged language development project (or stay just an idea).
     - [**IDE Integration**](#--ide-integration--)
   - [12.2 Compiler Plugins](#122-compiler-plugins)
   - [12.3 Versatile Tooling](#123-versatile-tooling)
+- [13. Final Thoughts](#13-final-thoughts)
+  - [13.1 Structs in Oxide](#131-structs-in-oxide)
 
 # 1. Implicit Lifetime Handling in Oxide
 
@@ -860,3 +863,72 @@ ecosystem around the language.
 By providing a powerful and versatile compiler API and enabling dynamic compiler
 plugins, Oxide aims to support a wide range of developer needs and create a
 seamless development experience.
+
+# 13. Final Thoughts
+
+This section may not be as thorough or correct as other sections as I wrote it
+at the last minute.
+
+### 13.1 Structs in Oxide
+
+Although I didn't write a section specifically about it, structs in oxide are
+simply defined as types with (optionally) named arguments. For example,
+
+```rust
+type Foo(bar: i32);
+
+// is equivalent to (in rust)
+
+struct Foo {
+    bar: i32,
+};
+```
+
+and
+
+```rust
+type Foo(i32);
+
+// is equivalent to (in rust)
+
+struct Foo(i32);
+```
+
+Also, types (structs) can be zero-sized as well (just like rust)
+
+```rust
+type Foo;
+
+// is equivalent to (in rust)
+
+struct Foo;
+```
+
+The reasoning behind this isn't necessarily complete. I just thought the syntax
+was simpler and also was somewhat future proofed to allow potentially more ways
+to define types (for example, algebraic types (tagged unions) are defined in a
+very similar way, `type Foo = Bar | Baz;`).
+
+I guess another reason is that when constructing `Foo`, it acts basically like
+calling a function. For example,
+
+```rust
+type Foo(bar: i32);
+
+fn main() {
+    // This is like calling a constructor on an object in many languages.
+    let foo = Foo(bar: 42);
+}
+```
+
+I suppose this also calls into question whether functions themselves should be
+allowed to have named arguments. For example,
+
+```rust
+fn foo(bar: i32) { ... }
+
+fn main() {
+    // I think this should be allowed, I don't see why not?
+    foo(bar: 42);
+}
+```
