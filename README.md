@@ -86,6 +86,7 @@ a fully-fledged language development project (or stay just an idea).
   - [13.1 Structs in Oxide](#131-structs-in-oxide)
   - [13.2 Concurrency](#132-concurrency)
   - [13.3 Macro Code Generation](#133-macro-code-generation)
+  - [13.4 Namespaces](#134-namespaces)
 
 # 1. Implicit Lifetime Handling in Oxide
 
@@ -980,3 +981,40 @@ general idea on how it could work.
 Also, I'd like to point out that macros would somehow need to be compiled and
 run at compile-time. This could potentially be done using wasm like I envisioned
 for compiler plugins.
+
+### 13.4 Namespaces
+
+Personally, I'm not a huge fan of modules in languages (including rust). I think
+they are too messy. Instead, I like how c# manages code grouping. At the start
+of an oxide file you can (must) declare it's namespace.
+
+```rust
+// example.ox
+namespace Example;
+```
+
+All types, methods, functions, and traits implemented in the Example namespace
+are available to this file without any using statements (this includes
+non-exported members). It's like all files in the Example namespace are just one
+large file.
+
+If you want a member to be private, you simply don't declare it public.
+
+```rust
+namespace Example;
+
+// Foo is private to the Example namespace. Not even other
+// namespaces in the same project can access it.
+type Foo; // To make it public simply do: pub type Foo;
+```
+
+If you want to allow all namespaces in this project to access Foo, but not
+people using this library then we can define it as pub(this) (or something like
+that).
+
+```rust
+namespace Example;
+
+// pub(this) means that Foo is public only to this project.
+pub(this) type Foo;
+```
