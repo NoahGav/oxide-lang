@@ -24,7 +24,21 @@ scenario by disallowing functions to return references. For instance, in Rust, a
 function like:
 
 ```rust
-fn foo(a: &T, b: &T, c: &T) -> &T { ... }
+// This code gives a compile-time error as rust cannot
+// know if the lifetime returned is from a, b, or c.
+fn foo<T>(a: &T, b: &T, c: &T) -> &T { ... }
+
+// However, the following code has no errors as rust
+// ensures the lifetime returned is the same as the
+// &self lifetime. This is why oxide prohibits returning
+// references from functions, but not methods.
+struct Foo;
+
+impl Foo {
+    fn foo<T>(&self, a: &T, b: &T, c: &T) -> &T {
+        todo!()
+    }
+}
 ```
 
 Presents challenges for the compiler to determine which reference's lifetime
