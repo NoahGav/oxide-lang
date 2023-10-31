@@ -1094,7 +1094,7 @@ something). For example,
 ```rust
 // The bubbles attribute tells the compiler that the error result of
 // this function should be implicitly bubbled to the return of the callee.
-@bubbles();
+@bubbles(); // Probably @propagates();
 fn add(a: i32, b: i32) -> i32? => a + b;
 
 fn main() -> ? {
