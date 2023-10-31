@@ -78,7 +78,65 @@ fn handle_error(error: Error) {
 }
 ```
 
-### Conclusion
+### 7. The `??` Operator
+
+The `??` operator in Oxide introduces a powerful and concise way to handle
+errors by replacing them with alternative values. This operator is especially
+useful when you want to provide a default or fallback value in case of errors,
+simplifying error handling and making your code more readable.
+
+#### Usage
+
+The `??` operator is used as follows:
+
+```oxide
+let value = some_operation() ?? fallback_value;
+```
+
+In this expression:
+
+- If `some_operation()` succeeds and returns a valid result, `value` will be
+  assigned the value returned by `some_operation()`.
+- If `some_operation()` encounters an error, the `??` operator replaces the
+  error with the `fallback_value`.
+
+#### Benefits
+
+The `??` operator offers several benefits:
+
+- **Simplified Error Handling:** It streamlines error handling by allowing you
+  to specify fallback values for specific operations.
+
+- **Clear Code:** Your code becomes more concise and easier to read, as you can
+  express error handling and fallback behavior in a single line.
+
+- **Reduced Error-Checking Code:** The `??` operator reduces the need for
+  extensive error-checking code when you don't care about the error and can
+  provide a sensible fallback.
+
+#### Examples
+
+Here are some examples of how to use the `??` operator in Oxide:
+
+```oxide
+let value = potentially_failing_operation() ?? 0;
+```
+
+In this example, if `potentially_failing_operation()` encounters an error, the
+`??` operator replaces the error with the value `0`.
+
+```oxide
+let value = fetch_data() ?? load_default_data();
+```
+
+In this example, if `fetch_data()` fails to retrieve data, the `??` operator
+loads default data using `load_default_data()`.
+
+The `??` operator is a valuable addition to Oxide's error handling toolbox,
+enabling developers to handle errors with ease and precision while providing
+fallback values when needed.
+
+### 8. Conclusion
 
 Error handling in Oxide prioritizes safety, clarity, and reliability. By
 providing systematic and standardized error handling techniques, the language
@@ -145,7 +203,7 @@ error handling is handled implicitly. The `=>` syntax allows developers to
 create precise error-handling functions without the need for additional `{}`
 blocks.
 
-## Conclusion
+### 3. Conclusion
 
 The `=>` syntax in Oxide offers a valuable tool for enhancing code precision and
 readability. By simplifying single-expression statements, it allows developers
