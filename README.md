@@ -80,45 +80,45 @@ safely, while significantly reducing the complexity associated with lifetimes.
 ```rust
 // Oxide
 fn bar(foo: &i32) {
-	std::io::println(`{foo}`);
+    std::io::println(`{foo}`);
 }
 
 fn main() {
-	let foo = 42;
-	bar(&foo);
+    let foo = 42;
+    bar(&foo);
 }
 
 // Rust Equivalent
 fn bar(foo: &Arc<RefCell<i32>>) {
-	// This is actually safe because we have a reference to the Arc.
-	// By doing it this way, we prevent the runtime borrow checking
-	// when we know a reference is safe to access (due to static
-	// borrow checking).
-	println!("{}", unsafe { &*foo.as_ptr() });
+    // This is actually safe because we have a reference to the Arc.
+    // By doing it this way, we prevent the runtime borrow checking
+    // when we know a reference is safe to access (due to static
+    // borrow checking).
+    println!("{}", unsafe { &*foo.as_ptr() });
 }
 
 fn main() {
-	// Since foo is passed by reference, we wrap it in a Arc.
-	let foo = Arc::new(RefCell::new(42));
+    // Since foo is passed by reference, we wrap it in a Arc.
+    let foo = Arc::new(RefCell::new(42));
 
-	// Passing the Arc by reference avoids cloning the Arc
-	// (and incrementing the reference count). It also
-	// uses a smaller memory footprint.
-	bar(&foo);
+    // Passing the Arc by reference avoids cloning the Arc
+    // (and incrementing the reference count). It also
+    // uses a smaller memory footprint.
+    bar(&foo);
 }
 ```
 
 ```rust
 // Oxide
 fn max(a: &i32, b: &i32) -> &i32
-	=> if a > b { a } else { b };
+    => if a > b { a } else { b };
 
 fn main() {
-	let a = 4;
-	let b = 3;
-	let max = max(&a, &b);
+    let a = 4;
+    let b = 3;
+    let max = max(&a, &b);
 
-	std::io::println(`{max}`); // prints 4.
+    std::io::println(`{max}`); // prints 4.
 }
 
 // Rust Equivalent
@@ -127,23 +127,23 @@ fn main() {
 // the reference count and so statically guarantees that the reference
 // will live at least as long as the user stores it.
 fn max(a: &Arc<RefCell<i32>>, b: &Arc<RefCell<i32>>) -> Arc<RefCell<i32>> {
-	// Once again, this is actually perfectly safe.
-	if unsafe { &*a.as_ptr() } > unsafe { &*b.as_ptr() } {
-		a.clone()
-	} else {
-		b.clone()
-	}
+    // Once again, this is actually perfectly safe.
+    if unsafe { &*a.as_ptr() } > unsafe { &*b.as_ptr() } {
+        a.clone()
+    } else {
+        b.clone()
+    }
 }
 
 fn main() {
-	let a = Arc::new(RefCell::new(4));
-	let b = Arc::new(RefCell::new(3));
-	let max = max(&a, &b);
+    let a = Arc::new(RefCell::new(4));
+    let b = Arc::new(RefCell::new(3));
+    let max = max(&a, &b);
 
-	// This is actually safe as oxide can determine that the returned
-	// reference must have a lifetime (in the general case) of min('a, 'b).
-	// Since both a and b are still valid at this point, the compiler
-	// knows that you can safely access it.
-	println!("{}", unsafe { &*max.as_ptr() });
+    // This is actually safe as oxide can determine that the returned
+    // reference must have a lifetime (in the general case) of min('a, 'b).
+    // Since both a and b are still valid at this point, the compiler
+    // knows that you can safely access it.
+    println!("{}", unsafe { &*max.as_ptr() });
 }
 ```
