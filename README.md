@@ -199,3 +199,43 @@ fn main() {
     bar(&foo);
 }
 ```
+
+```rust
+// Oxide
+use std;
+
+fn increment(foo: &mut i32) {
+    *foo += 1;
+}
+
+fn main() {
+    let foo = 41;
+    
+    // The creation of the &mut reference is borrow checked and analyzed
+    // for aliasing (which isn't allowed with mutable references). In
+    // this case, the compiler can easily see that this reference is
+    // allowed.
+    foo(&mut foo);
+    
+    io::println(`{foo}`);
+}
+
+// Rust Equivalent
+use std::{cell::RefCell, sync::Arc};
+
+fn increment(foo: &Arc<RefCell<i32>>) {
+    // This is safe to do since the mutable reference to foo
+    // was already passed to this function. That means if this
+    // function is ever called, it's safe to bypass the runtime
+    // borrow checking.
+    *unsafe { &mut *foo.as_ptr() } += 1;
+}
+
+fn main() {
+    let foo = Arc::new(RefCell::new(41));
+    
+    increment(&foo);
+    
+    println!("{}", unsafe { &*foo.as_ptr() });
+}
+```
