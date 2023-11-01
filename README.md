@@ -1,4 +1,4 @@
-# Oxide Language Proposal/Specification
+# Oxide Language Proposal (Revision #2)
 
 ## Introduction
 
