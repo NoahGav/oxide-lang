@@ -55,7 +55,7 @@ fn main() {
     std::io::println(`{max}`); // prints 4.
 }
 
-// Rust Equivalent
+// Generated Rust Code
 
 // In Oxide, the absence of lifetimes is resolved by returning a cloned
 // `Arc` instance of the maximum value, ensuring the reference's lifetime
@@ -194,7 +194,7 @@ fn main() {
     bar(&foo);
 }
 
-// Rust Equivalent
+// Generated Rust Code
 fn bar(foo: &Arc<RefCell<i32>>) {
     // This is actually safe because we have a reference to the Arc.
     // By doing it this way, we prevent the runtime borrow checking
@@ -234,9 +234,7 @@ fn main() {
     io::println(`{foo}`);
 }
 
-// Rust Equivalent
-use std::{cell::RefCell, sync::Arc};
-
+// Generated Rust Code
 fn increment(foo: &Arc<RefCell<i32>>) {
     // This is safe to do since the mutable reference to foo
     // was already passed to this function. That means if this
@@ -256,57 +254,28 @@ fn main() {
 
 # Implementing a Linked List (TODO)
 
-```rust
-// Oxide
-// In oxide, references stored in structs have an
-// implicit generic lifetime. If the compiler cannot
-// determine the lifetime of the reference by it's
-// usage. The lifetime will be assigned 'static. In
-// Oxide, a 'static lifetime means that the reference
-// count was incremented (to ensure that it will live
-// at least as long as the struct it's stored in).
-// This does come with the caveat that the compiler
-// will fall back to runtime borrow checking for that
-// reference.
-type Node(next: Option<&mut Node>);
-
-type LinkedList(head: Node);
-```
-
-### TODO:
-
-If the `Node` stores an immutable reference to the next `Node`, how can the node
-be mutated when a new `Node` is added to the end of the list? Would we have to
-use `&mut Node` and assume that the compiler will assign it the `'static`
-lifetime and we would just use runtime borrow checking? I think this is the
-right idea, but I believe it requires changing the way references are
-represented in Oxide. For example, the `Node` type would have to be represented
-something like this:
+This is an example implementation of a hypothetical linked list in Oxide.
 
 ```rust
 // Oxide
 type Node(next: Option<&mut Node>);
 
 fn main() {
-    let node = Node(None);
+    let node = Node(next: None);
+    let node2 = Node(next: None);
+
+    node.next = Some(&mut node2);
 }
 
-// Rust Equivalent
+// Generated Rust Code
 struct Node {
-    next: RefCell<Option<Arc<Node>>>,
+    next: Option<Arc<RefCell<Node>>>,
 }
 
 fn main() {
-    let node = Arc::new(Node {
-        next: RefCell:new(None),
-    });
+    let node = Arc::new(RefCell::new(Node { next: None }));
+    let node2 = Arc::new(RefCell::new(Node { next: None }));
+
+    unsafe { &mut *node.as_ptr() }.next = Some(node2.clone());
 }
 ```
-
-As you can see in this example, the `Node` instance itself is not wrapped in a
-`RefCell`. Instead, it's `next` field is. This not only allows the `Node` to
-store a reference to another `Node` inside itself (in the `next` field), but it
-also allows multiple references to a `Node` while still allowing interior
-mutability that won't panic when attempting to change the `next` field for a
-`Node` (as it's unlikely anyone would be borrowing the `next` field itself, but
-they could be borrowing the `next` `Node`).
