@@ -167,6 +167,13 @@ that might arise in languages lacking such features.
 
 - Technically, for copy types it would probably be better to use `Arc<Cell<T>>`.
 
+- Maybe the `!` operator (similar to c#) where an expression that may return an
+  error is told that we know that it will never be an error (and so if it is, it
+  panics, which would be a bug). The `!` operator (similar to the `?` operator)
+  would be equivalent to `unwrap` in rust. For example, `let foo = bar()!;`.
+  Here we are saying that bar will never return an error and so we are sure `!`
+  it will never panic.
+
 ## TODO: Examples of how borrow checking works without lifetimes
 
 ```rust
