@@ -174,6 +174,13 @@ that might arise in languages lacking such features.
   Here we are saying that bar will never return an error and so we are sure `!`
   it will never panic.
 
+- Someone suggested using `[T]` for generics (instead of `<T>`) and `(0)` for
+  indexing (instead of `[0]`). I think this might be a good idea. The main issue
+  I see currently is it kind of collides with tuples `(i32)` (which would be an
+  array of `i32`) and `(i32)` which would be a tuple of only one type.
+  Obviously, tuples with only one type should probably never be a thing, but
+  still.
+
 ## TODO: Examples of how borrow checking works without lifetimes
 
 ```rust
@@ -246,3 +253,60 @@ fn main() {
     println!("{}", unsafe { &*foo.as_ptr() });
 }
 ```
+
+# Implementing a Linked List (TODO)
+
+```rust
+// Oxide
+// In oxide, references stored in structs have an
+// implicit generic lifetime. If the compiler cannot
+// determine the lifetime of the reference by it's
+// usage. The lifetime will be assigned 'static. In
+// Oxide, a 'static lifetime means that the reference
+// count was incremented (to ensure that it will live
+// at least as long as the struct it's stored in).
+// This does come with the caveat that the compiler
+// will fall back to runtime borrow checking for that
+// reference.
+type Node(next: Option<&mut Node>);
+
+type LinkedList(head: Node);
+```
+
+### TODO:
+
+If the `Node` stores an immutable reference to the next `Node`, how can the node
+be mutated when a new `Node` is added to the end of the list? Would we have to
+use `&mut Node` and assume that the compiler will assign it the `'static`
+lifetime and we would just use runtime borrow checking? I think this is the
+right idea, but I believe it requires changing the way references are
+represented in Oxide. For example, the `Node` type would have to be represented
+something like this:
+
+```rust
+// Oxide
+type Node(next: Option<&mut Node>);
+
+fn main() {
+    let node = Node(None);
+}
+
+// Rust Equivalent
+struct Node {
+    next: RefCell<Option<Arc<Node>>>,
+}
+
+fn main() {
+    let node = Arc::new(Node {
+        next: RefCell:new(None),
+    });
+}
+```
+
+As you can see in this example, the `Node` instance itself is not wrapped in a
+`RefCell`. Instead, it's `next` field is. This not only allows the `Node` to
+store a reference to another `Node` inside itself (in the `next` field), but it
+also allows multiple references to a `Node` while still allowing interior
+mutability that won't panic when attempting to change the `next` field for a
+`Node` (as it's unlikely anyone would be borrowing the `next` field itself, but
+they could be borrowing the `next` `Node`).
