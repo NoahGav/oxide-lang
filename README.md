@@ -1,3 +1,22 @@
+# Revised Borrow Checking and Lifetimes
+
+# 1. No Lifetimes (TODO).
+
+All references are reference counted, but the compiler will optimize most increments (and decrements) away.
+
+# 2. Runtime Borrow Checking When Needed (TODO).
+
+If the compiler cannot statically determine in some scenario that a mutable reference is non-aliased, it will require runtime borrow checking.
+
+# 3. Mutable References Between Threads (TODO).
+
+In most scenarios, the compiler cannot know if it's safe to send a mutable
+reference between threads. Because runtime borrow checking isn't thread safe,
+these scenarios are disallowed. Instead, you have to pass an immutable ref
+with interior mutability. However, in scenarios where the compiler can know
+that a mutable reference between threads is valid, no runtime borrow checking
+is required and so will be allowed.
+
 # Oxide: A Proposal for a New Rust-Inspired Language
 
 ### Your Feedback Matters
