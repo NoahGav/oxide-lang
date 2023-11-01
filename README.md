@@ -1125,3 +1125,73 @@ other than having the same name (tbh, it's a fairly generic rust related name).
 ### 1. Gc Field Access Should Propagate Error
 
 Accessing a field on the Gc type should propagate the error upwards. This way you don't have to handle the (unlikely) error every time.
+
+# Clarifications
+
+### 1. Implicit Lifetime Handling in Oxide
+
+This has been addressed in other comments. Here are my current thoughts.
+
+#### How Implicit Lifetimes (could) be Handled
+
+>Ok, so imagine this function in the Oxide language (where all lifetimes are inferred and generic):
+>
+>```rust
+>fn foo(a: &T, b: &T, c: &T) -> &T
+>```
+>
+>Let the compiler assign a lifetime to each input reference (a reference created in the function can never be returned as it's owner is guaranteed to have a lifetime smaller than the reference itself, therefore it must be one of the references passed in).
+>
+>```rust
+>fn foo(a: &'a T, b: &'b T, c: &'c T) -> &T
+>```
+>
+>Since, like I said, lifetimes act similar to C++ template args. This means the lifetime of the return is inferred by usage of the `foo` function at every call-site. Of course, this can be simplified by having the compiler analyze the usage of the templated lifetimes (`'a`, `'b`, and `'c`). If the compiler determines that only reference `a` or reference `c` is returned, then the lifetime of the return is inferred to be `min('a, 'c)` (at the call-site, this means the compiler will statically choose either lifetime 'a or lifetime 'c depending on which one has the smaller lifetime at that specific call-site). The compiler will always choose the shortest lifetime of all the possible returned references to ensure that, even in the worst case, the lifetime of the returned reference is analyzed correctly. So this is how the function's generic lifetime args would be filled out by the compiler:
+>
+>```rust
+>fn foo(a: &'a T, b: &'b T, c: &'c T) -> &min('a, 'c) T
+>```
+
+#### How to Prevent Unexpected Changes in Public Api
+
+>It appears you are suggesting an auto-generated signature file similar to Ocaml's `.mli` files. This seems very intriguing as it seems to solve a lot of problems that people seem to have with my proposal. The solution to lifetimes being inferred by the compiler for function signatures could be solved by having a signature file for the api be generated on each major release (1.X.X, 2.X.X, ...). Then when you try to publish a minor release, it will fail if the implicit signature of the api does not match the explicit signature generated for that major release.
+
+I'm not saying any of these suggestions are fully-fledged or the final solution. Just my current thoughts.
+
+### 3.1 Stack and Heap Unification
+
+Yes, this was a miscommunication. All I meant was that the compiler would box unsized types. I did a poor job explaining it.
+
+### 4.3 Incremental Computation
+
+I'm not an expert in compiler design, but the macros do not actually change any of the source files used to build the semantic model. Instead, it's almost like they are each their own file. Obviously, this will increase compile times slightly due to the fact that the generated code can make a big difference. But in general, the macro code generation is only run when the input they receive changes, so in most cases, they would only run occasionally. Therefore, their impact won't be much more than slightly more input files would be in the first place.
+
+### 5. Algebraic Types (Tagged Unions)
+
+Yes, this is just a different syntax for enums. I only chose this because I had already chosen `type Foo;` for structs and wanted to keep it consistent (I also kind of like the syntax of Typescript, minus the JavaScript).
+
+### 6 Error Handling in Oxide
+
+Not quite right. `Option` would still be very much present in the language. It is only meant to replace `Result`.
+
+You mention that we already have `unwrap_or` and `unwrap_or_else`. Yes, I know. The point is to make the syntax more concise and to make it a core feature of the language instead of a bunch of different methods.
+
+For `try` blocks. The point of them was to remove the need to write `?` for every error in a specific section of a function and to handle all of the possible errors for it at once. There's plenty of times when you don't really care what part failed with an `Error`, just that it did or didn't.
+
+I'm not sure if there really is ambiguity with `&T?` as I don't think it makes sense to return a reference to an `Error`. So in the example, it would be either a `&T` or an `Error`.
+
+### Panicking
+
+I do agree that there probably should be some equivalent to panicking, but it should only be for truly exceptional cases. In most scenarios, panicking is not the right option. For example, `println!` in rust will panic if writing to `stdout` fails instead of just returning an `IOError` of some kind.
+
+It would probably be called `abort` and would be marked `unsafe`.
+
+### 10. The Copy Trait in Oxide
+
+I probably forgot to mention this in the document, but the `Gc` type would be apart of the `std` library.
+
+### 13.6 Arithmetic
+
+There is an argument to be made that arithmetic overflows as errors should be a project level option. This way you can optionally enable it for your project if you care that much about errors.
+
+Although, I really don't think having errors everywhere is really a bad thing because I proposed ways of making it easy not to handle in most cases where you don't care.
