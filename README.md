@@ -283,10 +283,14 @@ struct Node {
     next: Option<Arc<RefCell<Node>>>,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let node = Arc::new(RefCell::new(Node { next: None }));
     let node2 = Arc::new(RefCell::new(Node { next: None }));
 
-    unsafe { &mut *node.as_ptr() }.next = Some(node2.clone());
+    // Note, oxide would have to use it's own implementation
+    // for RefCell as the std one panics.
+    node.borrow_mut().next = Some(node2);
+
+    Ok(())
 }
 ```
