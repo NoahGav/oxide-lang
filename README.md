@@ -53,8 +53,8 @@ safely, while significantly reducing the complexity associated with lifetimes.
   `'static` lifetime cannot be known statically to follow the aliasing rules.
   Therefore, whenever accessing a field or dereferencing the reference itself,
   you are required to explicitly handle the potential runtime borrow checking
-  error (once again, this is basically like a c# nullable, where the compiler
-  marks `'static` references as `may be null`).
+  error (once again, this is basically like a c# nullable, where the c# compiler
+  marks references as `may be null here`).
 
 - References can be passed between threads in almost the same way as rust. The
   compiler will statically analyze the inferred lifetimes of all references and
@@ -73,6 +73,8 @@ safely, while significantly reducing the complexity associated with lifetimes.
   hashmap to be mutated with only a `&self` (and not `&mut self`) reference,
   while still statically ensuring no data races.
 
+- Technically, for copy types it would probably be better to use `Arc<Cell<T>>`.
+
 ## TODO: Examples of how borrow checking works without lifetimes
 
 ```rust
@@ -87,7 +89,7 @@ fn main() {
 }
 
 // Rust Equivalent
-fn  bar(foo:  &Arc<RefCell<i32>>) {
+fn bar(foo: &Arc<RefCell<i32>>) {
 	// This is actually safe because we have a reference to the Arc.
 	// By doing it this way, we prevent the runtime borrow checking
 	// when we know a reference is safe to access (due to static
@@ -95,10 +97,10 @@ fn  bar(foo:  &Arc<RefCell<i32>>) {
 	println!("{}", unsafe { &*foo.as_ptr() });
 }
 
-fn  main() {
+fn main() {
 	// Since foo is passed by reference, we wrap it in a Arc.
 	let foo = Arc::new(RefCell::new(42));
-	
+
 	// Passing the Arc by reference avoids cloning the Arc
 	// (and incrementing the reference count). It also
 	// uses a smaller memory footprint.
@@ -115,7 +117,7 @@ fn main() {
 	let a = 4;
 	let b = 3;
 	let max = max(&a, &b);
-	
+
 	std::io::println(`{max}`); // prints 4.
 }
 
@@ -124,18 +126,19 @@ fn main() {
 // of the max Arc passed in, instead of a reference to the Arc. This increments
 // the reference count and so statically guarantees that the reference
 // will live at least as long as the user stores it.
-fn  max(a:  &Arc<RefCell<i32>>, b:  &Arc<RefCell<i32>>) ->  Arc<RefCell<i32>> {
-	if  a  >  b {
+fn max(a: &Arc<RefCell<i32>>, b: &Arc<RefCell<i32>>) -> Arc<RefCell<i32>> {
+	// Once again, this is actually perfectly safe.
+	if unsafe { &*a.as_ptr() } > unsafe { &*b.as_ptr() } {
 		a.clone()
 	} else {
 		b.clone()
 	}
 }
 
-fn  main() {
-	let  a  =  Arc::new(RefCell::new(4));
-	let  b  =  Arc::new(RefCell::new(3));
-	let  max  =  max(&a, &b);
+fn main() {
+	let a = Arc::new(RefCell::new(4));
+	let b = Arc::new(RefCell::new(3));
+	let max = max(&a, &b);
 
 	// This is actually safe as oxide can determine that the returned
 	// reference must have a lifetime (in the general case) of min('a, 'b).
