@@ -260,11 +260,22 @@ This is an example implementation of a hypothetical linked list in Oxide.
 // Oxide
 type Node(next: Option<&mut Node>);
 
-fn main() {
-    let node = Node(next: None);
-    let node2 = Node(next: None);
+fn main() -> ? {
+    let mut node = Node(next: None);
+    let mut node2 = Node(next: None);
 
-    node.next = Some(&mut node2);
+    // Here will will assume that the compiler gave the
+    // next node a lifetime of 'static (even if this
+    // isn't actually the case, it's just for example).
+    // In order to safely access node.next we have
+    // to handle the potential borrow error (Well,
+    // Oxide would probably automatically bubble
+    // borrow errors up, so the ? might not be
+    // necessary. However, in most cases you would
+    // probably use the ! operator as you would
+    // want to be sure that the mutable access is
+    // valid.
+    node?.next = Some(&mut node2);
 }
 
 // Generated Rust Code
