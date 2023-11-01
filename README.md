@@ -2,10 +2,10 @@
 
 ## Introduction
 
-Oxide is a new programming language designed to provide many of the safety and
-performance benefits of Rust while simplifying the development process. This
-document outlines the core features of Oxide, focusing on its unique approach to
-borrow checking and lifetimes.
+Oxide is a proposal for a new programming language designed to provide many of
+the safety and performance benefits of Rust while simplifying the development
+process. This document outlines the core features of Oxide, focusing on its
+unique approach to borrow checking and lifetimes.
 
 ## Oxide's Simplified Borrow Checking and (Lack of) Lifetimes
 
