@@ -5,7 +5,7 @@ fn main() {
         let foo = 42;
     }"#;
 
-    println!("{:#?}", Parser::new().parse());
+    println!("{:#?}", Parser::new(src).parse());
 }
 
 // Use the "lowering" technique when building the semantic model.
