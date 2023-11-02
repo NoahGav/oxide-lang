@@ -1,4 +1,4 @@
-use lexer::Lexer;
+use lexer::TokenStream;
 
 mod lexer;
 
@@ -12,7 +12,10 @@ impl<'src> Parser<'src> {
     }
 
     pub fn parse(self) {
-        let tokens = Lexer::new(self.src).tokenize();
-        println!("{:#?}", tokens);
+        let tokens: TokenStream = self.src.into();
+
+        for token in tokens {
+            println!("{:?}", token);
+        }
     }
 }

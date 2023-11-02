@@ -6,7 +6,7 @@ pub struct Token {
     pub range: Range<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TokenKind {
     Unknown,
     Whitespace,
@@ -27,6 +27,10 @@ pub enum TokenKind {
     LParen,
     /// )
     RParen,
+    /// {
+    LBrace,
+    /// }
+    RBrace,
     /// =
     Eq,
     /// +
@@ -41,27 +45,14 @@ impl Token {
     }
 }
 
-pub struct Lexer<'src> {
+struct Lexer<'src> {
     src: &'src str,
     cursor: usize,
 }
 
 impl<'src> Lexer<'src> {
-    pub fn new(src: &'src str) -> Self {
+    fn new(src: &'src str) -> Self {
         Self { src, cursor: 0 }
-    }
-
-    pub fn tokenize(mut self) -> Vec<Token> {
-        let mut tokens = Vec::new();
-
-        loop {
-            let token = self.next_token();
-
-            match token {
-                Some(token) => tokens.push(token),
-                None => return tokens,
-            }
-        }
     }
 
     fn next_token(&mut self) -> Option<Token> {
@@ -82,6 +73,8 @@ impl<'src> Lexer<'src> {
             Some(c) => match c {
                 '(' => token_and_pop!(TokenKind::LParen, 1),
                 ')' => token_and_pop!(TokenKind::RParen, 1),
+                '{' => token_and_pop!(TokenKind::LBrace, 1),
+                '}' => token_and_pop!(TokenKind::RBrace, 1),
                 ',' => token_and_pop!(TokenKind::Comma, 1),
                 ';' => token_and_pop!(TokenKind::SemiColon, 1),
                 '+' => token_and_pop!(TokenKind::Plus, 1),
@@ -167,5 +160,25 @@ impl<'src> Lexer<'src> {
     fn next(&mut self) -> Option<char> {
         self.cursor += 1;
         self.peek()
+    }
+}
+
+pub struct TokenStream<'src> {
+    lexer: Lexer<'src>,
+}
+
+impl<'src> Iterator for TokenStream<'src> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.lexer.next_token()
+    }
+}
+
+impl<'src> From<&'src str> for TokenStream<'src> {
+    fn from(src: &'src str) -> Self {
+        Self {
+            lexer: Lexer::new(src),
+        }
     }
 }
