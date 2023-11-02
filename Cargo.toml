@@ -3,4 +3,8 @@ name = "oxide-lang"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = ["crates/*"]
+
 [dependencies]
+oxide-parser = { path = "./crates/parser" }
