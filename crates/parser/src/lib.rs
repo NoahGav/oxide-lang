@@ -1,6 +1,7 @@
 use std::ops::Range;
 
-use lexer::{Lexer, Token};
+use lexer::Lexer;
+use syntax::{FnBody, FnDecl, FnInputs, Type};
 
 mod lexer;
 mod syntax;
@@ -24,8 +25,19 @@ impl<'src> Scanner<'src> {
         }
     }
 
-    fn peek(&self, offset: usize) -> Option<Token> {
-        self.tokens.get(self.cursor + offset).cloned()
+    fn peek(&self, offset: usize) -> lexer::Token {
+        let index = (self.cursor + offset).min(self.src.len() - 1);
+        self.tokens[index].clone()
+    }
+
+    fn eat(&mut self) -> lexer::Token {
+        let token = self.peek(0);
+        self.cursor += 1;
+        token
+    }
+
+    fn text(&self, token: &lexer::Token) -> &str {
+        &self.src[token.range.clone()]
     }
 }
 
@@ -54,13 +66,28 @@ impl<'src> Parser<'src> {
         // building a syntax token that includes the
         // syntax node's index. That's it.
 
-        while let Some(token) = self.scanner.peek(0) {
-            let ctx = ParseContext::new(&mut self.scanner);
+        let mut tokens = vec![];
+        let mut nodes = vec![];
 
-            let _ = match token.kind {
-                lexer::TokenKind::Fn => ctx.fn_decl(),
-                _ => todo!(),
-            };
+        loop {
+            let token = self.scanner.peek(0);
+
+            if token.kind != lexer::TokenKind::Eoi {
+                let ctx = ParseContext::new(&mut self.scanner);
+
+                let (node, parse_tokens) = match token.kind {
+                    lexer::TokenKind::Fn => ctx.fn_decl(),
+                    _ => todo!(),
+                };
+
+                nodes.push(node);
+
+                let node = nodes.len() - 1;
+
+                tokens.extend(parse_tokens.iter().cloned().map(|token| token.into(node)));
+            } else {
+                break;
+            }
         }
 
         todo!()
@@ -80,7 +107,37 @@ impl<'src, 'scanner> ParseContext<'src, 'scanner> {
         }
     }
 
-    fn fn_decl(self) -> (syntax::Node, Vec<ParseToken>) {
+    fn emit(&mut self, kind: syntax::TokenKind, range: Range<usize>) {
+        self.tokens.push(ParseToken { kind, range });
+    }
+
+    fn eat(&mut self, kind: syntax::TokenKind) {
+        let token = self.scanner.eat();
+        self.emit(kind, token.range);
+    }
+
+    fn missing(&mut self, kind: syntax::TokenKind) {
+        let token = self.scanner.peek(0);
+
+        self.emit(
+            syntax::TokenKind::Missing(Box::new(kind)),
+            token.range.start..token.range.start,
+        );
+    }
+
+    fn skip_whitespace(&mut self) {
+        loop {
+            let token = self.scanner.peek(0);
+
+            if token.kind == lexer::TokenKind::Whitespace {
+                self.eat(syntax::TokenKind::Whitespace);
+            } else {
+                break;
+            }
+        }
+    }
+
+    fn fn_decl(mut self) -> (syntax::Node, Vec<ParseToken>) {
         // This is the entry point of parsing a fn decl. While
         // parsing we will emit parse tokens. This includes all
         // tokens, including skipped and missing tokens. When
@@ -90,10 +147,38 @@ impl<'src, 'scanner> ParseContext<'src, 'scanner> {
         // converts the parse tokens to syntax tokens and extends
         // the tree tokens.
 
-        todo!()
+        self.eat(syntax::TokenKind::FnKeyword);
+
+        let name = self.ident(syntax::TokenKind::FnName);
+
+        // TODO: inputs, outputs, and body.
+
+        let node = syntax::Node::FnDecl(FnDecl {
+            name,
+            inputs: Ok(FnInputs),
+            output: Ok(Type),
+            body: Ok(FnBody),
+        });
+
+        (node, self.tokens)
+    }
+
+    fn ident(&mut self, kind: syntax::TokenKind) -> Result<String, syntax::Error> {
+        self.skip_whitespace();
+
+        let token = self.scanner.peek(0);
+
+        if let lexer::TokenKind::Ident = token.kind {
+            self.eat(kind);
+            Ok(self.scanner.text(&token).into())
+        } else {
+            self.missing(kind.clone());
+            Err(syntax::Error::missing(kind, token.range))
+        }
     }
 }
 
+#[derive(Debug, Clone)]
 struct ParseToken {
     kind: syntax::TokenKind,
     range: Range<usize>,

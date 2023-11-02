@@ -6,8 +6,9 @@ pub struct Token {
     pub range: Range<usize>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
+    Eoi,
     Unknown,
     Whitespace,
     Ident,
@@ -63,7 +64,14 @@ impl<'src> Lexer<'src> {
 
             match token {
                 Some(token) => tokens.push(token),
-                None => return tokens,
+                None => {
+                    tokens.push(Token {
+                        kind: TokenKind::Eoi,
+                        range: self.cursor..self.cursor,
+                    });
+
+                    return tokens;
+                }
             }
         }
     }

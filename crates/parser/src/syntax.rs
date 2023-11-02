@@ -22,17 +22,35 @@ pub struct Token {
     pub(crate) node: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenKind {
     Missing(Box<TokenKind>),
     Skipped,
     Whitespace,
     Delimiter(lexer::TokenKind),
+    FnKeyword,
     FnName,
 }
 
 #[derive(Debug)]
-pub struct Error;
+pub struct Error {
+    kind: ErrorKind,
+    range: Range<usize>,
+}
+
+impl Error {
+    pub(crate) fn missing(kind: TokenKind, range: Range<usize>) -> Self {
+        Self {
+            kind: ErrorKind::Missing(kind),
+            range: range.start..range.start,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ErrorKind {
+    Missing(TokenKind),
+}
 
 #[derive(Debug)]
 pub enum Node {
