@@ -18,13 +18,14 @@ impl Tree {
 pub struct Token {
     pub kind: TokenKind,
     pub range: Range<usize>,
-    pub missing: bool,
     /// The index used to get the associated [Node] from the [Tree].
-    node: usize,
+    pub(crate) node: usize,
 }
 
 #[derive(Debug)]
 pub enum TokenKind {
+    Missing(Box<TokenKind>),
+    Skipped,
     Whitespace,
     Delimiter(lexer::TokenKind),
     FnName,

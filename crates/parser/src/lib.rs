@@ -1,15 +1,71 @@
+use std::ops::Range;
+
 mod lexer;
 mod syntax;
 
-pub struct Parser;
+pub struct Parser<'src> {
+    src: &'src str,
+}
 
-impl Parser {
-    pub fn new() -> Self {
-        Self
+impl<'src> Parser<'src> {
+    pub fn new(src: &'src str) -> Self {
+        Self { src }
     }
 
     pub fn parse(self) -> syntax::Tree {
+        // Ok, so the way parsing will work is like this.
+        // We lookahead to determine what node to parse
+        // For example, a FnDecl. We then transfer over
+        // to parsing the FnDecl. A FnDecl is split into
+        // sections (name, inputs, output, and body).
+        // When parsing each section we either succeed
+        // or we fail (with a syntax::Error). If it fails
+        // it will consume all tokens until it reaches
+        // on of the delimiters for that section (for
+        // example, the inputs delimiter is the ")" token).
+        // While we are doing this, we emit each lexer
+        // Token, range, and syntax TokenKind. After the
+        // node is fully parsed (even with errors), we
+        // add one token to the tree's tokens list by
+        // building a syntax token that includes the
+        // syntax node's index. That's it.
+
         todo!()
+    }
+}
+
+struct ParseContext<'src> {
+    src: &'src str,
+    tokens: Vec<ParseToken>,
+}
+
+impl<'src> ParseContext<'src> {
+    fn fn_decl(self) -> (syntax::Node, Vec<ParseToken>) {
+        // This is the entry point of parsing a fn decl. While
+        // parsing we will emit parse tokens. This includes all
+        // tokens, including skipped and missing tokens. When
+        // we are done, we return the parsed syntax::Node and
+        // the emitted parse tokens. The main parser then appends
+        // the node to the tree (obtaining it's index) and then
+        // converts the parse tokens to syntax tokens and extends
+        // the tree tokens.
+
+        todo!()
+    }
+}
+
+struct ParseToken {
+    kind: syntax::TokenKind,
+    range: Range<usize>,
+}
+
+impl ParseToken {
+    fn into(self, node: usize) -> syntax::Token {
+        syntax::Token {
+            kind: self.kind,
+            range: self.range,
+            node,
+        }
     }
 }
 
