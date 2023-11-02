@@ -1,3 +1,18 @@
+mod lexer;
+mod syntax;
+
+pub struct Parser;
+
+impl Parser {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn parse(self) -> syntax::Tree {
+        todo!()
+    }
+}
+
 // Ok, now that I have an idea of how it should work. I can refactor everything.
 // The general design is fairly simple. We build a list of syntax::Tokens where
 // a syntax token is like a regular token, but is more specific. For example,

@@ -1,3 +1,14 @@
+use std::ops::Range;
+
+#[derive(Debug)]
+pub struct Token {
+    pub kind: TokenKind,
+    pub range: Range<usize>,
+}
+
+#[derive(Debug)]
+pub enum TokenKind {}
+
 // use std::ops::Range;
 
 // #[derive(Debug, Clone)]

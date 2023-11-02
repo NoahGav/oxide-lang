@@ -1,14 +1,12 @@
-// use oxide_parser::Parser;
+use oxide_parser::Parser;
 
-// fn main() {
-//     let src = r#"fn main() {
-//         let foo = 42;
-//     }"#;
+fn main() {
+    let src = r#"fn main() {
+        let foo = 42;
+    }"#;
 
-//     println!("{:#?}", Parser::new(src).parse());
-// }
-
-fn main() {}
+    println!("{:#?}", Parser::new().parse());
+}
 
 // Use the "lowering" technique when building the semantic model.
 // The lowering technique is where higher level language constructs
