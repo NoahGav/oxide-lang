@@ -181,6 +181,17 @@ that might arise in languages lacking such features.
   Obviously, tuples with only one type should probably never be a thing, but
   still.
 
+- Oxide shold start with compiling directly to Rust (similar to how typescript
+  compiles to javascript). However, it should still be able to compile directly
+  to machine code (or wasm) using cranelift as the backend. It's very important
+  that they produce identical results in all cases (so that there is no
+  unpredictability or difference between them).
+
+- I really would like hot module replacement to work (similar to java's debug
+  mode). It would probably work by converting cranelift ir, skipping optimizations
+  and going directly to wasm, and then using cranelift to build a wasm runtime
+  that supports hot module replacement at runtime.
+
 ## TODO: Examples of how borrow checking works without lifetimes
 
 ```rust
