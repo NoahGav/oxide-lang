@@ -1,7 +1,7 @@
-use oxide_lang::parser::Lexer;
+use oxide_parser::Parser;
 
 fn main() {
     let src = r#"let foo = 42;"#;
-    let tokens = Lexer::new(src).tokenize();
-    println!("{:#?}", tokens);
+
+    Parser::new(src).parse();
 }

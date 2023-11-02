@@ -85,6 +85,7 @@ impl<'src> Lexer<'src> {
                 ',' => token_and_pop!(TokenKind::Comma, 1),
                 ';' => token_and_pop!(TokenKind::SemiColon, 1),
                 '+' => token_and_pop!(TokenKind::Plus, 1),
+                '&' => token_and_pop!(TokenKind::Amp, 1),
                 '=' => match self.next() {
                     Some('>') => token_and_pop!(TokenKind::FatArrow, 2),
                     _ => token!(TokenKind::Eq),
