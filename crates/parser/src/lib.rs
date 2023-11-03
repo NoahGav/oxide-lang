@@ -6,7 +6,6 @@ use syntax::FnInputs;
 use crate::syntax::FnDecl;
 
 mod lexer;
-mod parser;
 mod scanner;
 mod syntax;
 
