@@ -69,23 +69,6 @@ impl<'src> Parser<'src> {
     }
 
     pub fn parse(mut self) -> syntax::Tree {
-        // Ok, so the way parsing will work is like this.
-        // We lookahead to determine what node to parse
-        // For example, a FnDecl. We then transfer over
-        // to parsing the FnDecl. A FnDecl is split into
-        // sections (name, inputs, output, and body).
-        // When parsing each section we either succeed
-        // or we fail (with a syntax::Error). If it fails
-        // it will consume all tokens until it reaches
-        // on of the delimiters for that section (for
-        // example, the inputs delimiter is the ")" token).
-        // While we are doing this, we emit each lexer
-        // Token, range, and syntax TokenKind. After the
-        // node is fully parsed (even with errors), we
-        // add one token to the tree's tokens list by
-        // building a syntax token that includes the
-        // syntax node's index. That's it.
-
         let mut tokens = vec![];
         let mut nodes = vec![];
 
