@@ -1,3 +1,19 @@
+// TODO: I need to refactor this code. The way it works is fairly simple.
+// TODO: Once we figure out what syntax node to parse (e.g. FnDecl) we then
+// TODO: parse it. When parsing, we split the node into sections (e.g. name,
+// TODO: inputs, output, and body). Each section always has an ending delimiter.
+// TODO: For example, the inputs ends with ")", the output ends with "=>" or "{".
+// TODO: Another example, a variable declaration has this grammar. "let" expr
+// TODO: (";" | "=" expr ";"). This means that first section is delimited by
+// TODO: a ";" or "=". The second section is delimited only be a ";". The
+// TODO: purpose of the ending delimiter and sections is for error handling.
+// TODO: If at any point while parsing a section we encounter an error. Parsing
+// TODO: of that section immediately stops and we skip all tokens until we
+// TODO: return the Eoi or one of the ending delimiters. That section is
+// TODO: then resolved as a specific syntax::Error. If the section is fully
+// TODO: parsed with no errors, then the parsed section is returned (e.g.
+// TODO: FnInputs).
+
 use std::ops::Range;
 
 use lexer::Lexer;
@@ -140,23 +156,6 @@ impl<'src, 'scanner> ParseContext<'src, 'scanner> {
         }
     }
 
-    fn fn_decl(mut self) -> (syntax::Node, Vec<ParseToken>) {
-        self.eat(syntax::TokenKind::FnKeyword);
-
-        let name = self.ident(syntax::TokenKind::FnName);
-
-        // TODO: inputs, outputs, and body.
-
-        let node = syntax::Node::FnDecl(FnDecl {
-            name,
-            inputs: Ok(FnInputs),
-            output: Ok(Type),
-            body: Ok(FnBody),
-        });
-
-        (node, self.tokens)
-    }
-
     fn ident(&mut self, kind: syntax::TokenKind) -> Result<String, syntax::Error> {
         self.skip_whitespace();
 
@@ -169,6 +168,57 @@ impl<'src, 'scanner> ParseContext<'src, 'scanner> {
             self.missing(kind.clone());
             Err(syntax::Error::missing(kind, token.range))
         }
+    }
+
+    fn fn_decl(mut self) -> (syntax::Node, Vec<ParseToken>) {
+        self.eat(syntax::TokenKind::FnKeyword);
+
+        let name = self.ident(syntax::TokenKind::FnName);
+        let inputs = self.fn_inputs();
+        let output = self.fn_output();
+        let body = self.fn_body();
+
+        let node = syntax::Node::FnDecl(FnDecl {
+            name,
+            inputs,
+            output,
+            body,
+        });
+
+        (node, self.tokens)
+    }
+
+    fn delimited<T, F: FnOnce(&mut ParseContext) -> Result<T, syntax::Error>>(
+        &mut self,
+        parser: F,
+        end_delimiter: lexer::TokenKind,
+    ) -> Result<T, syntax::Error> {
+        let result = parser(self);
+
+        // TODO: If the result was an error, skip tokens until we reach
+        // TODO: the end delimiter (or Eoi).
+
+        result
+    }
+
+    fn fn_inputs(&mut self) -> Result<FnInputs, syntax::Error> {
+        // TODO: LParen.
+
+        self.delimited(
+            |ctx| {
+                ctx.eat(syntax::TokenKind::FnKeyword);
+                Ok(FnInputs)
+            },
+            lexer::TokenKind::RParen,
+        )
+    }
+
+    fn fn_output(&mut self) -> Result<Type, syntax::Error> {
+        todo!()
+    }
+
+    fn fn_body(&mut self) -> Result<FnBody, syntax::Error> {
+        todo!()
     }
 }
 
