@@ -1,7 +1,7 @@
 use oxide_parser::Parser;
 
 fn main() {
-    let src = r#"fn main"#;
+    let src = r#"fn foo bar: &i32)"#;
 
     println!("{:#?}", Parser::new(src).parse());
 }

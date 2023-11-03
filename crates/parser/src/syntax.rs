@@ -25,7 +25,7 @@ pub struct Token {
 #[derive(Debug, Clone)]
 pub enum TokenKind {
     Missing(Box<TokenKind>),
-    Skipped,
+    Skipped(lexer::TokenKind),
     Whitespace,
     Delimiter(lexer::TokenKind),
     FnKeyword,
@@ -62,7 +62,7 @@ pub struct FnDecl {
     pub name: Result<String, Error>,
     pub inputs: Result<FnInputs, Error>,
     pub output: Result<Type, Error>,
-    pub body: Result<FnBody, Error>,
+    pub body: FnBody,
 }
 
 #[derive(Debug)]

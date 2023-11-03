@@ -20,6 +20,8 @@ pub enum TokenKind {
     Fn,
     /// &
     Amp,
+    /// :
+    Colon,
     /// ;
     SemiColon,
     /// ,
@@ -97,6 +99,7 @@ impl<'src> Lexer<'src> {
                 '{' => token_and_pop!(TokenKind::LBrace, 1),
                 '}' => token_and_pop!(TokenKind::RBrace, 1),
                 ',' => token_and_pop!(TokenKind::Comma, 1),
+                ':' => token_and_pop!(TokenKind::Colon, 1),
                 ';' => token_and_pop!(TokenKind::SemiColon, 1),
                 '+' => token_and_pop!(TokenKind::Plus, 1),
                 '&' => token_and_pop!(TokenKind::Amp, 1),

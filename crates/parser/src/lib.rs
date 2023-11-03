@@ -1,129 +1,178 @@
-// TODO: I need to refactor this code. The way it works is fairly simple.
-// TODO: Once we figure out what syntax node to parse (e.g. FnDecl) we then
-// TODO: parse it. When parsing, we split the node into sections (e.g. name,
-// TODO: inputs, output, and body). Each section always has an ending delimiter.
-// TODO: For example, the inputs ends with ")", the output ends with "=>" or "{".
-// TODO: Another example, a variable declaration has this grammar. "let" expr
-// TODO: (";" | "=" expr ";"). This means that first section is delimited by
-// TODO: a ";" or "=". The second section is delimited only be a ";". The
-// TODO: purpose of the ending delimiter and sections is for error handling.
-// TODO: If at any point while parsing a section we encounter an error. Parsing
-// TODO: of that section immediately stops and we skip all tokens until we
-// TODO: return the Eoi or one of the ending delimiters. That section is
-// TODO: then resolved as a specific syntax::Error. If the section is fully
-// TODO: parsed with no errors, then the parsed section is returned (e.g.
-// TODO: FnInputs).
-
 use std::ops::Range;
 
-use lexer::Lexer;
-use syntax::{FnBody, FnDecl, FnInputs, Type};
+use syntax::FnInputs;
+
+use crate::scanner::Scanner;
 
 mod lexer;
+mod scanner;
 mod syntax;
 
-/// The [Parser] is responsible for parsing source code and constructing a [syntax::Tree].
-///
-/// It uses a [Scanner] to tokenize the input source code, and based on the identified tokens,
-/// it determines which language constructs to parse. The [Parser] follows a systematic process,
-/// inspecting tokens, selecting the appropriate parsing context, and parsing various language
-/// constructs.
-///
-/// The parser handles the parsing of different language constructs, such as function declarations
-/// ([FnDecl]), and divides them into sections like name, inputs, output, and body. When parsing each
-/// section, the parser can either succeed or encounter errors. If an error occurs, the parser skips
-/// all tokens between the error and the ending delimiter for that section, and then returns the specific
-/// error encountered. Each parsed section can only have one error.
-///
-/// The [Parser] captures all tokens emitted by the lexer, including all types of tokens, such as
-/// skipped and missing tokens. It emits information about each token's kind, range, and [syntax::TokenKind],
-/// which are collected as parse tokens.
-///
-/// Once a language construct is fully parsed, even in the presence of errors, the [Parser] constructs
-/// the [syntax::Token]s, associating them with the appropriate syntax node. These syntax tokens are then
-/// combined to build the final [syntax::Tree].
 pub struct Parser<'src> {
     scanner: Scanner<'src>,
-}
-
-struct Scanner<'src> {
-    src: &'src str,
-    tokens: Vec<lexer::Token>,
-    cursor: usize,
-}
-
-impl<'src> Scanner<'src> {
-    fn new(src: &'src str) -> Self {
-        Self {
-            src,
-            tokens: Lexer::new(src).tokenize(),
-            cursor: 0,
-        }
-    }
-
-    fn peek(&self, offset: usize) -> lexer::Token {
-        let index = (self.cursor + offset).min(self.src.len() - 1);
-        self.tokens[index].clone()
-    }
-
-    fn eat(&mut self) -> lexer::Token {
-        let token = self.peek(0);
-        self.cursor += 1;
-        token
-    }
-
-    fn text(&self, token: &lexer::Token) -> &str {
-        &self.src[token.range.clone()]
-    }
+    tokens: Vec<syntax::Token>,
+    nodes: Vec<syntax::Node>,
 }
 
 impl<'src> Parser<'src> {
     pub fn new(src: &'src str) -> Self {
         Self {
             scanner: Scanner::new(src),
+            tokens: vec![],
+            nodes: vec![],
         }
     }
 
     pub fn parse(mut self) -> syntax::Tree {
-        let mut tokens = vec![];
-        let mut nodes = vec![];
-
         loop {
             let token = self.scanner.peek(0);
 
-            if token.kind != lexer::TokenKind::Eoi {
-                let ctx = ParseContext::new(&mut self.scanner);
-
-                let (node, parse_tokens) = match token.kind {
-                    lexer::TokenKind::Fn => ctx.fn_decl(),
-                    _ => todo!(),
-                };
-
-                nodes.push(node);
-
-                let node = nodes.len() - 1;
-
-                tokens.extend(parse_tokens.iter().cloned().map(|token| token.into(node)));
-            } else {
-                break;
+            match token.kind {
+                lexer::TokenKind::Fn => self.fn_decl(),
+                lexer::TokenKind::Eoi => break,
+                _ => todo!("{:?}", token.kind),
             }
         }
 
-        syntax::Tree { tokens, nodes }
+        syntax::Tree {
+            tokens: self.tokens,
+            nodes: self.nodes,
+        }
+    }
+
+    fn ident(
+        scanner: &mut ScannerAndEmitter,
+        kind: syntax::TokenKind,
+    ) -> Result<String, syntax::Error> {
+        let token = scanner.peek();
+
+        if let lexer::TokenKind::Ident = token.kind {
+            scanner.eat(kind);
+            Ok(scanner.text(&token).into())
+        } else {
+            Err(scanner.missing(&token, kind))
+        }
+    }
+
+    fn fn_decl(&mut self) {
+        let mut scanner = ScannerAndEmitter::new(&mut self.scanner);
+
+        scanner.eat(syntax::TokenKind::FnKeyword);
+
+        let ident = Parse::with_recovery(
+            &mut scanner,
+            |scanner| Parser::ident(scanner, syntax::TokenKind::FnName),
+            |token| token == lexer::TokenKind::LParen,
+            false,
+        );
+
+        let inputs = Parse::with_recovery(
+            &mut scanner,
+            Parser::fn_inputs,
+            |token| token == lexer::TokenKind::RParen,
+            true,
+        );
+
+        println!("{:#?}", ident);
+        println!("{:#?}", inputs);
+
+        println!("{:#?}", scanner.tokens);
+
+        // TODO: Create node and convert scanner tokens in syntax tokens.
+    }
+
+    fn fn_inputs(scanner: &mut ScannerAndEmitter) -> Result<FnInputs, syntax::Error> {
+        let token = scanner.peek();
+
+        if token.kind == lexer::TokenKind::LParen {
+            scanner.eat(syntax::TokenKind::Delimiter(lexer::TokenKind::LParen));
+        } else {
+            return Err(scanner.missing(
+                &token,
+                syntax::TokenKind::Delimiter(lexer::TokenKind::LParen),
+            ));
+        }
+
+        todo!()
     }
 }
 
-struct ParseContext<'src, 'scanner> {
+struct Parse;
+
+impl Parse {
+    #[inline(always)]
+    fn with_recovery<
+        T,
+        P: FnOnce(&mut ScannerAndEmitter) -> Result<T, syntax::Error>,
+        R: Fn(lexer::TokenKind) -> bool,
+    >(
+        scanner: &mut ScannerAndEmitter,
+        parser: P,
+        is_recovery_delimiter: R,
+        consume: bool,
+    ) -> Result<T, syntax::Error> {
+        let result = parser(scanner);
+
+        if result.is_err() {
+            loop {
+                let token = scanner.peek_and_skip();
+
+                if token.kind == lexer::TokenKind::Eoi {
+                    // TODO: scanner.missing(&token, kind);
+                    break;
+                } else if is_recovery_delimiter(token.kind.clone()) {
+                    if consume {
+                        scanner.eat(syntax::TokenKind::Delimiter(token.kind));
+                    }
+
+                    break;
+                } else {
+                    scanner.skip();
+                }
+            }
+        }
+
+        result
+    }
+}
+
+struct ScannerAndEmitter<'scanner, 'src> {
     scanner: &'scanner mut Scanner<'src>,
     tokens: Vec<ParseToken>,
 }
 
-impl<'src, 'scanner> ParseContext<'src, 'scanner> {
+impl<'scanner, 'src> ScannerAndEmitter<'scanner, 'src> {
     fn new(scanner: &'scanner mut Scanner<'src>) -> Self {
         Self {
             scanner,
             tokens: vec![],
         }
+    }
+
+    fn text(&self, token: &lexer::Token) -> &str {
+        self.scanner.text(token)
+    }
+
+    fn peek(&mut self) -> lexer::Token {
+        let mut token = self.scanner.peek(0);
+
+        while token.kind == lexer::TokenKind::Whitespace {
+            self.eat(syntax::TokenKind::Whitespace);
+            token = self.scanner.peek(0);
+        }
+
+        self.scanner.peek(0)
+    }
+
+    fn peek_and_skip(&mut self) -> lexer::Token {
+        let mut token = self.scanner.peek(0);
+
+        while token.kind == lexer::TokenKind::Whitespace {
+            self.eat(syntax::TokenKind::Skipped(lexer::TokenKind::Whitespace));
+            token = self.scanner.peek(0);
+        }
+
+        self.scanner.peek(0)
     }
 
     fn emit(&mut self, kind: syntax::TokenKind, range: Range<usize>) {
@@ -135,90 +184,18 @@ impl<'src, 'scanner> ParseContext<'src, 'scanner> {
         self.emit(kind, token.range);
     }
 
-    fn missing(&mut self, kind: syntax::TokenKind) {
-        let token = self.scanner.peek(0);
-
+    fn missing(&mut self, token: &lexer::Token, kind: syntax::TokenKind) -> syntax::Error {
         self.emit(
-            syntax::TokenKind::Missing(Box::new(kind)),
+            syntax::TokenKind::Missing(Box::new(kind.clone())),
             token.range.start..token.range.start,
         );
+
+        syntax::Error::missing(kind, token.range.clone())
     }
 
-    fn skip_whitespace(&mut self) {
-        loop {
-            let token = self.scanner.peek(0);
-
-            if token.kind == lexer::TokenKind::Whitespace {
-                self.eat(syntax::TokenKind::Whitespace);
-            } else {
-                break;
-            }
-        }
-    }
-
-    fn ident(&mut self, kind: syntax::TokenKind) -> Result<String, syntax::Error> {
-        self.skip_whitespace();
-
-        let token = self.scanner.peek(0);
-
-        if let lexer::TokenKind::Ident = token.kind {
-            self.eat(kind);
-            Ok(self.scanner.text(&token).into())
-        } else {
-            self.missing(kind.clone());
-            Err(syntax::Error::missing(kind, token.range))
-        }
-    }
-
-    fn fn_decl(mut self) -> (syntax::Node, Vec<ParseToken>) {
-        self.eat(syntax::TokenKind::FnKeyword);
-
-        let name = self.ident(syntax::TokenKind::FnName);
-        let inputs = self.fn_inputs();
-        let output = self.fn_output();
-        let body = self.fn_body();
-
-        let node = syntax::Node::FnDecl(FnDecl {
-            name,
-            inputs,
-            output,
-            body,
-        });
-
-        (node, self.tokens)
-    }
-
-    fn delimited<T, F: FnOnce(&mut ParseContext) -> Result<T, syntax::Error>>(
-        &mut self,
-        parser: F,
-        end_delimiter: lexer::TokenKind,
-    ) -> Result<T, syntax::Error> {
-        let result = parser(self);
-
-        // TODO: If the result was an error, skip tokens until we reach
-        // TODO: the end delimiter (or Eoi).
-
-        result
-    }
-
-    fn fn_inputs(&mut self) -> Result<FnInputs, syntax::Error> {
-        // TODO: LParen.
-
-        self.delimited(
-            |ctx| {
-                ctx.eat(syntax::TokenKind::FnKeyword);
-                Ok(FnInputs)
-            },
-            lexer::TokenKind::RParen,
-        )
-    }
-
-    fn fn_output(&mut self) -> Result<Type, syntax::Error> {
-        todo!()
-    }
-
-    fn fn_body(&mut self) -> Result<FnBody, syntax::Error> {
-        todo!()
+    fn skip(&mut self) {
+        let token = self.scanner.eat();
+        self.emit(syntax::TokenKind::Skipped(token.kind), token.range);
     }
 }
 
