@@ -1,248 +1,190 @@
-use std::ops::Range;
+use std::marker::PhantomData;
 
-use syntax::{FnBody, FnDecl, FnInputs, Type};
+use scanner::Scanner;
+use syntax::FnInputs;
 
-use crate::scanner::Scanner;
+use crate::syntax::FnDecl;
 
 mod lexer;
+mod parser;
 mod scanner;
 mod syntax;
 
-pub struct Parser<'src> {
+struct Parser<'src> {
     scanner: Scanner<'src>,
-    tokens: Vec<syntax::Token>,
-    nodes: Vec<syntax::Node>,
+    nodes: Vec<Result<syntax::Node, syntax::Error>>,
 }
 
 impl<'src> Parser<'src> {
-    pub fn new(src: &'src str) -> Self {
+    fn new(src: &'src str) -> Self {
         Self {
             scanner: Scanner::new(src),
-            tokens: vec![],
             nodes: vec![],
         }
     }
+}
 
-    pub fn parse(mut self) -> syntax::Tree {
-        loop {
-            let token = self.scanner.peek(0);
+struct RecoverableParser<T, P, R> {
+    parse: P,
+    recover: R,
+    ty: PhantomData<T>,
+}
 
-            let (node, parse_tokens) = match token.kind {
-                lexer::TokenKind::Fn => self.fn_decl(),
-                lexer::TokenKind::Eoi => break,
-                _ => todo!("{:?}", token.kind),
-            };
+#[derive(PartialEq, Eq)]
+enum Recovery {
+    /// Skip the token upon recovery.
+    Skip,
+    /// Stop on that token upon recovery.
+    Stop,
+}
 
-            self.nodes.push(node);
+struct ParseContext<'p, 'src, T> {
+    parser: &'p mut Parser<'src>,
+    tokens: Vec<syntax::Token>,
+    ty: PhantomData<T>,
+}
 
-            let node = self.nodes.len() - 1;
-
-            self.tokens
-                .extend(parse_tokens.iter().cloned().map(|token| token.into(node)));
-        }
-
-        syntax::Tree {
-            tokens: self.tokens,
-            nodes: self.nodes,
-        }
-    }
-
-    fn ident(
-        scanner: &mut ScannerAndEmitter,
-        kind: syntax::TokenKind,
-    ) -> Result<String, syntax::Error> {
-        let token = scanner.peek();
-
-        if let lexer::TokenKind::Ident = token.kind {
-            scanner.eat(kind);
-            Ok(scanner.text(&token).into())
-        } else {
-            Err(scanner.missing(&token, kind))
-        }
-    }
-
-    fn fn_decl(&mut self) -> (syntax::Node, Vec<ParseToken>) {
-        let mut scanner = ScannerAndEmitter::new(&mut self.scanner);
-
-        scanner.eat(syntax::TokenKind::FnKeyword);
-
-        let name = Parse::with_recovery(
-            &mut scanner,
-            |scanner| Parser::ident(scanner, syntax::TokenKind::FnName),
-            |token| token == lexer::TokenKind::LParen,
-            false,
-        );
-
-        let inputs = Parse::with_recovery(
-            &mut scanner,
-            Parser::fn_inputs,
-            |token| token == lexer::TokenKind::RParen,
-            true,
-        );
-
-        // TODO: output.
-        // TODO: body.
-
-        let node = syntax::Node::FnDecl(FnDecl {
-            name,
-            inputs,
-            output: Ok(Type),
-            body: FnBody,
-        });
-
-        (node, scanner.tokens)
-    }
-
-    fn fn_inputs(scanner: &mut ScannerAndEmitter) -> Result<FnInputs, syntax::Error> {
-        let token = scanner.peek();
-
-        if token.kind == lexer::TokenKind::LParen {
-            scanner.eat(syntax::TokenKind::Delimiter(lexer::TokenKind::LParen));
-        } else {
-            return Err(scanner.missing(
-                &token,
-                syntax::TokenKind::Delimiter(lexer::TokenKind::LParen),
-            ));
-        }
-
-        // TODO: Actual inputs.
-
-        let token = scanner.peek();
-
-        if token.kind == lexer::TokenKind::RParen {
-            scanner.eat(syntax::TokenKind::Delimiter(lexer::TokenKind::RParen));
-        } else {
-            return Err(scanner.unexpected(&token));
-        }
-
-        Ok(FnInputs)
+fn recoverable<T, P, R>(parse: P, recover: R) -> RecoverableParser<T, P, R> {
+    RecoverableParser {
+        parse,
+        recover,
+        ty: PhantomData,
     }
 }
 
-struct Parse;
-
-impl Parse {
-    #[inline(always)]
-    fn with_recovery<
+impl<
         T,
-        P: FnOnce(&mut ScannerAndEmitter) -> Result<T, syntax::Error>,
-        R: Fn(lexer::TokenKind) -> bool,
-    >(
-        scanner: &mut ScannerAndEmitter,
-        parser: P,
-        is_recovery_delimiter: R,
-        consume: bool,
-    ) -> Result<T, syntax::Error> {
-        let result = parser(scanner);
+        P: Fn(&mut ParseContext<T>) -> syntax::Result<T>,
+        R: Fn(lexer::TokenKind) -> Option<Recovery>,
+    > RecoverableParser<T, P, R>
+{
+    fn execute(&self, parser: &mut Parser) -> syntax::Result<T> {
+        let mut context = ParseContext {
+            parser,
+            tokens: vec![],
+            ty: PhantomData,
+        };
 
-        if result.is_err() {
+        let result = (self.parse)(&mut context);
+
+        result.map_err(|mut error| {
+            let mut recovery;
+            let mut token = context.peek();
+
             loop {
-                let token = scanner.peek_and_skip();
-
                 if token.kind == lexer::TokenKind::Eoi {
+                    recovery = Some(Recovery::Stop);
                     break;
-                } else if is_recovery_delimiter(token.kind.clone()) {
-                    if consume {
-                        scanner.eat(syntax::TokenKind::Delimiter(token.kind));
-                    }
+                }
 
+                recovery = (self.recover)(token.kind);
+
+                if recovery.is_some() {
                     break;
                 } else {
-                    scanner.skip();
+                    context.skip(&token);
+                    token = context.parser.scanner.next();
                 }
             }
-        }
 
-        result
+            if recovery.unwrap() == Recovery::Skip {
+                context.skip(&token);
+            }
+
+            error.tokens = context.tokens;
+            error
+        })
     }
 }
 
-struct ScannerAndEmitter<'scanner, 'src> {
-    scanner: &'scanner mut Scanner<'src>,
-    tokens: Vec<ParseToken>,
-}
-
-impl<'scanner, 'src> ScannerAndEmitter<'scanner, 'src> {
-    fn new(scanner: &'scanner mut Scanner<'src>) -> Self {
-        Self {
-            scanner,
-            tokens: vec![],
-        }
-    }
-
-    fn text(&self, token: &lexer::Token) -> &str {
-        self.scanner.text(token)
-    }
-
+impl<'p, 'src, T> ParseContext<'p, 'src, T> {
+    // TODO: This should return a syntax::Token with trivia (the skipped stuff).
     fn peek(&mut self) -> lexer::Token {
-        let mut token = self.scanner.peek(0);
+        let mut token = self.parser.scanner.peek(0);
 
         while token.kind == lexer::TokenKind::Whitespace {
-            self.eat(syntax::TokenKind::Whitespace);
-            token = self.scanner.peek(0);
+            // TODO: Token trivia.
+            token = self.parser.scanner.next();
         }
 
-        self.scanner.peek(0)
+        token
     }
 
-    fn peek_and_skip(&mut self) -> lexer::Token {
-        let mut token = self.scanner.peek(0);
+    fn expect(&mut self, expected: lexer::TokenKind, kind: syntax::TokenKind) -> syntax::Token {
+        let token = self.peek();
 
-        while token.kind == lexer::TokenKind::Whitespace {
-            self.eat(syntax::TokenKind::Skipped(lexer::TokenKind::Whitespace));
-            token = self.scanner.peek(0);
-        }
+        let token = if token.kind == expected {
+            syntax::Token {
+                kind,
+                range: self.parser.scanner.eat().range,
+            }
+        } else {
+            syntax::Token::missing(kind, &token)
+        };
 
-        self.scanner.peek(0)
+        self.tokens.push(token.clone());
+        token
     }
 
-    fn emit(&mut self, kind: syntax::TokenKind, range: Range<usize>) {
-        self.tokens.push(ParseToken { kind, range });
+    fn expect_delimiter(&mut self, delimiter: lexer::TokenKind) -> syntax::Token {
+        self.expect(delimiter, syntax::TokenKind::Delimiter(delimiter))
     }
 
-    fn eat(&mut self, kind: syntax::TokenKind) {
-        let token = self.scanner.eat();
-        self.emit(kind, token.range);
+    fn expect_keyword(&mut self, keyword: lexer::TokenKind) -> syntax::Token {
+        self.expect(keyword, syntax::TokenKind::Keyword(keyword))
     }
 
-    fn missing(&mut self, token: &lexer::Token, kind: syntax::TokenKind) -> syntax::Error {
-        self.emit(
-            syntax::TokenKind::Missing(Box::new(kind.clone())),
-            token.range.start..token.range.start,
-        );
-
-        syntax::Error::missing(kind, token.range.clone())
+    fn expect_ident(&mut self) -> syntax::Token {
+        self.expect(lexer::TokenKind::Ident, syntax::TokenKind::Ident)
     }
 
-    fn unexpected(&mut self, token: &lexer::Token) -> syntax::Error {
-        self.scanner.eat();
-
-        self.emit(
-            syntax::TokenKind::Skipped(token.kind.clone()),
-            token.range.clone(),
-        );
-
-        syntax::Error::unexpected(token.clone())
+    fn panic(&mut self, error: syntax::Error) -> syntax::Result<T> {
+        Err(error)
     }
 
-    fn skip(&mut self) {
-        let token = self.scanner.eat();
-        self.emit(syntax::TokenKind::Skipped(token.kind), token.range);
+    fn skip(&mut self, token: &lexer::Token) {
+        self.tokens.push(syntax::Token::skip(token));
     }
 }
 
-#[derive(Debug, Clone)]
-struct ParseToken {
-    kind: syntax::TokenKind,
-    range: Range<usize>,
-}
+pub fn parse(src: &str) -> syntax::Tree {
+    let mut parser = Parser::new(src);
 
-impl ParseToken {
-    fn into(self, node: usize) -> syntax::Token {
-        syntax::Token {
-            kind: self.kind,
-            range: self.range,
-            node,
-        }
+    let fn_inputs = recoverable(
+        |parser: &mut ParseContext<'_, '_, _>| {
+            let l_paren = parser.expect_delimiter(lexer::TokenKind::LParen);
+            let r_paren = parser.expect_delimiter(lexer::TokenKind::RParen);
+
+            Ok(FnInputs { l_paren, r_paren })
+        },
+        |token| match token {
+            lexer::TokenKind::RParen => Some(Recovery::Skip),
+            // TODO: ThinArrow.
+            lexer::TokenKind::FatArrow => Some(Recovery::Stop),
+            lexer::TokenKind::LBrace => Some(Recovery::Stop),
+            _ => None,
+        },
+    );
+
+    let fn_decl = recoverable(
+        |parser: &mut ParseContext<'_, '_, _>| {
+            let fn_keyword = parser.expect_keyword(lexer::TokenKind::Fn);
+            let name = parser.expect_ident();
+            let inputs = fn_inputs.execute(parser.parser);
+
+            Ok(FnDecl {
+                fn_keyword,
+                name,
+                inputs,
+            })
+        },
+        |_| None,
+    );
+
+    let result = fn_decl.execute(&mut parser);
+    parser.nodes.push(result.map(syntax::Node::FnDecl));
+
+    syntax::Tree {
+        nodes: parser.nodes,
     }
 }

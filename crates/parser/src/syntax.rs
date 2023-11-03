@@ -4,60 +4,36 @@ use crate::lexer;
 
 #[derive(Debug)]
 pub struct Tree {
+    pub nodes: Vec<Result<Node>>,
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
+
+#[derive(Debug, Clone)]
+pub struct Error {
+    pub kind: ErrorKind,
     pub tokens: Vec<Token>,
-    pub(crate) nodes: Vec<Node>,
 }
 
-impl Tree {
-    pub fn node_for(&self, token: &Token) -> &Node {
-        &self.nodes[token.node]
-    }
+#[derive(Debug, Clone)]
+pub enum ErrorKind {
+    Debug,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub kind: TokenKind,
     pub range: Range<usize>,
-    /// The index used to get the associated [Node] from the [Tree].
-    pub(crate) node: usize,
 }
 
 #[derive(Debug, Clone)]
 pub enum TokenKind {
+    Debug,
     Missing(Box<TokenKind>),
     Skipped(lexer::TokenKind),
-    Whitespace,
     Delimiter(lexer::TokenKind),
-    FnKeyword,
-    FnName,
-}
-
-#[derive(Debug)]
-pub struct Error {
-    pub kind: ErrorKind,
-    pub range: Range<usize>,
-}
-
-#[derive(Debug)]
-pub enum ErrorKind {
-    Missing(TokenKind),
-    Unexpected(lexer::TokenKind),
-}
-
-impl Error {
-    pub(crate) fn missing(kind: TokenKind, range: Range<usize>) -> Self {
-        Self {
-            kind: ErrorKind::Missing(kind),
-            range: range.start..range.start,
-        }
-    }
-
-    pub(crate) fn unexpected(token: lexer::Token) -> Self {
-        Self {
-            kind: ErrorKind::Unexpected(token.kind),
-            range: token.range,
-        }
-    }
+    Keyword(lexer::TokenKind),
+    Ident,
 }
 
 #[derive(Debug)]
@@ -67,17 +43,48 @@ pub enum Node {
 
 #[derive(Debug)]
 pub struct FnDecl {
-    pub name: Result<String, Error>,
-    pub inputs: Result<FnInputs, Error>,
-    pub output: Result<Type, Error>,
-    pub body: FnBody,
+    pub fn_keyword: Token,
+    pub name: Token,
+    pub inputs: Result<FnInputs>,
+    // TODO: output.
+    // TODO: body.
 }
 
 #[derive(Debug)]
-pub struct FnInputs;
+pub struct FnInputs {
+    pub l_paren: Token,
+    // TODO: Args.
+    pub r_paren: Token,
+}
 
-#[derive(Debug)]
-pub struct Type;
+impl Error {
+    pub fn debug() -> Self {
+        Self {
+            kind: ErrorKind::Debug,
+            tokens: vec![],
+        }
+    }
+}
 
-#[derive(Debug)]
-pub struct FnBody;
+impl Token {
+    pub fn debug() -> Self {
+        Self {
+            kind: TokenKind::Debug,
+            range: 0..0,
+        }
+    }
+
+    pub fn missing(expected: TokenKind, found: &lexer::Token) -> Self {
+        Self {
+            kind: TokenKind::Missing(Box::new(expected)),
+            range: found.range.clone(),
+        }
+    }
+
+    pub fn skip(skipped: &lexer::Token) -> Self {
+        Self {
+            kind: TokenKind::Skipped(skipped.kind),
+            range: skipped.range.clone(),
+        }
+    }
+}

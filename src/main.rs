@@ -1,9 +1,8 @@
-use oxide_parser::Parser;
+use oxide_parser::parse;
 
 fn main() {
-    let src = r#"fn main()"#;
-
-    println!("{:#?}", Parser::new(src).parse());
+    let src = "fn main()";
+    println!("{:#?}", parse(src));
 }
 
 // Use the "lowering" technique when building the semantic model.

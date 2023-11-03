@@ -1,4 +1,4 @@
-use crate::lexer::{Lexer, Token};
+use crate::lexer::{Lexer, Token, TokenKind};
 
 pub struct Scanner<'src> {
     src: &'src str,
@@ -16,14 +16,26 @@ impl<'src> Scanner<'src> {
     }
 
     pub fn peek(&self, offset: usize) -> Token {
-        let index = (self.cursor + offset).min(self.src.len() - 1);
-        self.tokens[index].clone()
+        if self.src.is_empty() {
+            Token {
+                kind: TokenKind::Eoi,
+                range: 0..0,
+            }
+        } else {
+            let index = (self.cursor + offset).min(self.tokens.len() - 1);
+            self.tokens[index].clone()
+        }
     }
 
     pub fn eat(&mut self) -> Token {
         let token = self.peek(0);
         self.cursor += 1;
         token
+    }
+
+    pub fn next(&mut self) -> Token {
+        self.cursor += 1;
+        self.peek(0)
     }
 
     pub fn text(&self, token: &Token) -> &str {
