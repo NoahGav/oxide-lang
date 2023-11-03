@@ -5,7 +5,7 @@ use crate::lexer;
 #[derive(Debug)]
 pub struct Tree {
     pub tokens: Vec<Token>,
-    nodes: Vec<Node>,
+    pub(crate) nodes: Vec<Node>,
 }
 
 impl Tree {
@@ -34,8 +34,8 @@ pub enum TokenKind {
 
 #[derive(Debug)]
 pub struct Error {
-    kind: ErrorKind,
-    range: Range<usize>,
+    pub kind: ErrorKind,
+    pub range: Range<usize>,
 }
 
 impl Error {

@@ -90,7 +90,7 @@ impl<'src> Parser<'src> {
             }
         }
 
-        todo!()
+        syntax::Tree { tokens, nodes }
     }
 }
 
