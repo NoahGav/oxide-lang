@@ -6,6 +6,26 @@ use syntax::{FnBody, FnDecl, FnInputs, Type};
 mod lexer;
 mod syntax;
 
+/// The [Parser] is responsible for parsing source code and constructing a [syntax::Tree].
+///
+/// It uses a [Scanner] to tokenize the input source code, and based on the identified tokens,
+/// it determines which language constructs to parse. The [Parser] follows a systematic process,
+/// inspecting tokens, selecting the appropriate parsing context, and parsing various language
+/// constructs.
+///
+/// The parser handles the parsing of different language constructs, such as function declarations
+/// ([FnDecl]), and divides them into sections like name, inputs, output, and body. When parsing each
+/// section, the parser can either succeed or encounter errors. If an error occurs, the parser skips
+/// all tokens between the error and the ending delimiter for that section, and then returns the specific
+/// error encountered. Each parsed section can only have one error.
+///
+/// The [Parser] captures all tokens emitted by the lexer, including all types of tokens, such as
+/// skipped and missing tokens. It emits information about each token's kind, range, and [syntax::TokenKind],
+/// which are collected as parse tokens.
+///
+/// Once a language construct is fully parsed, even in the presence of errors, the [Parser] constructs
+/// the [syntax::Token]s, associating them with the appropriate syntax node. These syntax tokens are then
+/// combined to build the final [syntax::Tree].
 pub struct Parser<'src> {
     scanner: Scanner<'src>,
 }
@@ -138,15 +158,6 @@ impl<'src, 'scanner> ParseContext<'src, 'scanner> {
     }
 
     fn fn_decl(mut self) -> (syntax::Node, Vec<ParseToken>) {
-        // This is the entry point of parsing a fn decl. While
-        // parsing we will emit parse tokens. This includes all
-        // tokens, including skipped and missing tokens. When
-        // we are done, we return the parsed syntax::Node and
-        // the emitted parse tokens. The main parser then appends
-        // the node to the tree (obtaining it's index) and then
-        // converts the parse tokens to syntax tokens and extends
-        // the tree tokens.
-
         self.eat(syntax::TokenKind::FnKeyword);
 
         let name = self.ident(syntax::TokenKind::FnName);
