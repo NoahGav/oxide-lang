@@ -38,6 +38,12 @@ pub struct Error {
     pub range: Range<usize>,
 }
 
+#[derive(Debug)]
+pub enum ErrorKind {
+    Missing(TokenKind),
+    Unexpected(lexer::TokenKind),
+}
+
 impl Error {
     pub(crate) fn missing(kind: TokenKind, range: Range<usize>) -> Self {
         Self {
@@ -45,11 +51,13 @@ impl Error {
             range: range.start..range.start,
         }
     }
-}
 
-#[derive(Debug)]
-pub enum ErrorKind {
-    Missing(TokenKind),
+    pub(crate) fn unexpected(token: lexer::Token) -> Self {
+        Self {
+            kind: ErrorKind::Unexpected(token.kind),
+            range: token.range,
+        }
+    }
 }
 
 #[derive(Debug)]

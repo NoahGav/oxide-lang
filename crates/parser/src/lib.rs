@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use syntax::FnInputs;
+use syntax::{FnBody, FnDecl, FnInputs, Type};
 
 use crate::scanner::Scanner;
 
@@ -27,11 +27,18 @@ impl<'src> Parser<'src> {
         loop {
             let token = self.scanner.peek(0);
 
-            match token.kind {
+            let (node, parse_tokens) = match token.kind {
                 lexer::TokenKind::Fn => self.fn_decl(),
                 lexer::TokenKind::Eoi => break,
                 _ => todo!("{:?}", token.kind),
-            }
+            };
+
+            self.nodes.push(node);
+
+            let node = self.nodes.len() - 1;
+
+            self.tokens
+                .extend(parse_tokens.iter().cloned().map(|token| token.into(node)));
         }
 
         syntax::Tree {
@@ -54,12 +61,12 @@ impl<'src> Parser<'src> {
         }
     }
 
-    fn fn_decl(&mut self) {
+    fn fn_decl(&mut self) -> (syntax::Node, Vec<ParseToken>) {
         let mut scanner = ScannerAndEmitter::new(&mut self.scanner);
 
         scanner.eat(syntax::TokenKind::FnKeyword);
 
-        let ident = Parse::with_recovery(
+        let name = Parse::with_recovery(
             &mut scanner,
             |scanner| Parser::ident(scanner, syntax::TokenKind::FnName),
             |token| token == lexer::TokenKind::LParen,
@@ -73,12 +80,17 @@ impl<'src> Parser<'src> {
             true,
         );
 
-        println!("{:#?}", ident);
-        println!("{:#?}", inputs);
+        // TODO: output.
+        // TODO: body.
 
-        println!("{:#?}", scanner.tokens);
+        let node = syntax::Node::FnDecl(FnDecl {
+            name,
+            inputs,
+            output: Ok(Type),
+            body: FnBody,
+        });
 
-        // TODO: Create node and convert scanner tokens in syntax tokens.
+        (node, scanner.tokens)
     }
 
     fn fn_inputs(scanner: &mut ScannerAndEmitter) -> Result<FnInputs, syntax::Error> {
@@ -93,7 +105,17 @@ impl<'src> Parser<'src> {
             ));
         }
 
-        todo!()
+        // TODO: Actual inputs.
+
+        let token = scanner.peek();
+
+        if token.kind == lexer::TokenKind::RParen {
+            scanner.eat(syntax::TokenKind::Delimiter(lexer::TokenKind::RParen));
+        } else {
+            return Err(scanner.unexpected(&token));
+        }
+
+        Ok(FnInputs)
     }
 }
 
@@ -118,7 +140,6 @@ impl Parse {
                 let token = scanner.peek_and_skip();
 
                 if token.kind == lexer::TokenKind::Eoi {
-                    // TODO: scanner.missing(&token, kind);
                     break;
                 } else if is_recovery_delimiter(token.kind.clone()) {
                     if consume {
@@ -191,6 +212,17 @@ impl<'scanner, 'src> ScannerAndEmitter<'scanner, 'src> {
         );
 
         syntax::Error::missing(kind, token.range.clone())
+    }
+
+    fn unexpected(&mut self, token: &lexer::Token) -> syntax::Error {
+        self.scanner.eat();
+
+        self.emit(
+            syntax::TokenKind::Skipped(token.kind.clone()),
+            token.range.clone(),
+        );
+
+        syntax::Error::unexpected(token.clone())
     }
 
     fn skip(&mut self) {
