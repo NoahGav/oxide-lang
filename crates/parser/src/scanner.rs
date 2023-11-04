@@ -38,7 +38,7 @@ impl<'src> Scanner<'src> {
         self.peek(0)
     }
 
-    pub fn text(&self, token: &Token) -> &str {
-        &self.src[token.range.clone()]
-    }
+    // pub fn text(&self, token: &Token) -> &str {
+    //     &self.src[token.range.clone()]
+    // }
 }

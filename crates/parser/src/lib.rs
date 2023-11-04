@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
 use scanner::Scanner;
-use syntax::FnInputs;
+use syntax::{FnInput, FnInputs, Type};
 
 use crate::syntax::FnDecl;
 
 mod lexer;
 mod scanner;
-mod syntax;
+pub mod syntax;
 
 struct Parser<'src> {
     scanner: Scanner<'src>,
@@ -137,9 +137,9 @@ impl<'p, 'src, T> ParseContext<'p, 'src, T> {
         self.expect(lexer::TokenKind::Ident, syntax::TokenKind::Ident)
     }
 
-    fn panic(&mut self, error: syntax::Error) -> syntax::Result<T> {
-        Err(error)
-    }
+    // fn panic(&mut self, error: syntax::Error) -> syntax::Result<T> {
+    //     Err(error)
+    // }
 
     fn skip(&mut self, token: &lexer::Token) {
         self.tokens.push(syntax::Token::skip(token));
@@ -152,9 +152,47 @@ pub fn parse(src: &str) -> syntax::Tree {
     let fn_inputs = recoverable(
         |parser: &mut ParseContext<'_, '_, _>| {
             let l_paren = parser.expect_delimiter(lexer::TokenKind::LParen);
+
+            // TODO: How do I parse the delimited inputs (e.g. a, b, c).
+
+            let mut inputs = vec![];
+
+            loop {
+                let name = parser.expect_ident();
+                let colon = parser.expect_delimiter(lexer::TokenKind::Colon);
+                let r#type = Ok(Type::Simple(parser.expect_ident()));
+                let comma = parser.expect_delimiter(lexer::TokenKind::Comma);
+
+                // TODO: Parse type. However, it should be parsed inline meaning
+                // TODO: that if there is an error it should use the delimiters
+                // TODO: specified by us (here we would use the Comma and RParen
+                // TODO: delimiters for recovery). Parsing types should probably
+                // TODO: use a pratt parser. The pratt parser should be wrapped
+                // TODO: in a recoverable parser so that if it fails, we can
+                // TODO: skip tokens until a sync point is reached (the sync
+                // TODO: point depends on the context. for example, the types
+                // TODO: being parsed for the fn inputs would use the Comma and
+                // TODO: RParen tokens as sync points).
+
+                inputs.push(FnInput {
+                    name,
+                    colon,
+                    r#type,
+                    comma,
+                });
+
+                if parser.peek().kind == lexer::TokenKind::RParen {
+                    break;
+                }
+            }
+
             let r_paren = parser.expect_delimiter(lexer::TokenKind::RParen);
 
-            Ok(FnInputs { l_paren, r_paren })
+            Ok(FnInputs {
+                l_paren,
+                inputs,
+                r_paren,
+            })
         },
         |token| match token {
             lexer::TokenKind::RParen => Some(Recovery::Skip),
@@ -184,6 +222,7 @@ pub fn parse(src: &str) -> syntax::Tree {
     parser.nodes.push(result.map(syntax::Node::FnDecl));
 
     syntax::Tree {
+        // src: src.into(),
         nodes: parser.nodes,
     }
 }

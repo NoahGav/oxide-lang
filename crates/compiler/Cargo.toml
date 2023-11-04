@@ -1,0 +1,9 @@
+[package]
+name = "oxide-compiler"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+oxide-parser = { path = "../parser" }
+blinc = { path = "../blinc" }
+enum-as-inner = "0.6.0"

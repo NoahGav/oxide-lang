@@ -1,8 +1,17 @@
 use oxide_parser::parse;
 
 fn main() {
-    let src = "fn main()";
-    println!("{:#?}", parse(src));
+    let src = "fn foo(bar: i32)";
+    let tree = parse(src);
+    println!("{:#?}", tree);
+
+    // tree.nodes.iter().for_each(|node| {
+    //     if let Ok(node) = node {
+    //         match node {
+    //             syntax::Node::FnDecl(fn_decl) => println!("{:?}", tree.text(&fn_decl.name)),
+    //         }
+    //     }
+    // });
 }
 
 // Use the "lowering" technique when building the semantic model.

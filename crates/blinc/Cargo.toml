@@ -1,0 +1,10 @@
+[package]
+name = "blinc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ahash = "0.8.6"
+hashbrown = { version = "0.14.2", features = ["rayon"] }
+parking_lot = "0.12.1"
+rayon = "1.8.0"

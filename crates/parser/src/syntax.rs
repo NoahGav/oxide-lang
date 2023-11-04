@@ -7,6 +7,12 @@ pub struct Tree {
     pub nodes: Vec<Result<Node>>,
 }
 
+// impl Tree {
+//     pub fn text(&self, token: &Token) -> &str {
+//         &self.src[token.range.clone()]
+//     }
+// }
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Clone)]
@@ -53,8 +59,21 @@ pub struct FnDecl {
 #[derive(Debug)]
 pub struct FnInputs {
     pub l_paren: Token,
-    // TODO: Args.
+    pub inputs: Vec<FnInput>,
     pub r_paren: Token,
+}
+
+#[derive(Debug)]
+pub struct FnInput {
+    pub name: Token,
+    pub colon: Token,
+    pub r#type: Result<Type>,
+    pub comma: Token,
+}
+
+#[derive(Debug)]
+pub enum Type {
+    Simple(Token),
 }
 
 impl Error {
@@ -77,7 +96,7 @@ impl Token {
     pub fn missing(expected: TokenKind, found: &lexer::Token) -> Self {
         Self {
             kind: TokenKind::Missing(Box::new(expected)),
-            range: found.range.clone(),
+            range: found.range.start..found.range.start,
         }
     }
 
