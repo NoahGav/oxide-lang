@@ -7,7 +7,7 @@
 use std::{
     ops::{Deref, DerefMut},
     path::PathBuf,
-    sync::{Arc, Mutex},
+    sync::{Arc, OnceLock},
 };
 
 use dashmap::{DashMap, DashSet};
@@ -30,7 +30,7 @@ lazy_static! {
 pub struct Compiler {
     db: RwLock<db::Database>,
     files: DashMap<PathBuf, SourceFile>,
-    watcher: Mutex<Option<ReadDirectoryChangesWatcher>>,
+    watcher: OnceLock<Option<ReadDirectoryChangesWatcher>>,
     open_files: DashSet<PathBuf>,
 }
 
@@ -78,7 +78,7 @@ impl Compiler {
         Self {
             db: RwLock::new(db::Database::default()),
             files: DashMap::new(),
-            watcher: Mutex::new(None),
+            watcher: OnceLock::new(),
             open_files: DashSet::new(),
         }
     }
@@ -96,7 +96,7 @@ impl Compiler {
 
             watcher.watch(&path, RecursiveMode::Recursive).unwrap();
 
-            *self.watcher.lock().unwrap() = Some(watcher);
+            self.watcher.set(Some(watcher)).unwrap();
         }
 
         // Synchronize with the filesystem (regardless of if we are watching it).
