@@ -1,4 +1,4 @@
-use clap::{arg, command, Command};
+use clap::{command, Command};
 
 /// The "oxide" binary is the entry point to all operations for Oxide.
 /// It is just a simple cli tool that is used to launch other binaries.
@@ -12,18 +12,11 @@ use clap::{arg, command, Command};
 fn main() {
     let matches = command!()
         .name("oxide")
-        .subcommand(
-            Command::new("analyzer")
-                .arg(arg!(--workspace <FOLDER> "the path to the workspace folder").required(true))
-                .about("Starts the oxide-analyzer language server"),
-        )
+        .subcommand(Command::new("analyzer").about("Starts the oxide-analyzer language server"))
         .get_matches();
 
-    if let Some(analyzer) = matches.subcommand_matches("analyzer") {
-        let workspace: &String = analyzer.get_one("workspace").unwrap();
-
+    if matches.subcommand_matches("analyzer").is_some() {
         std::process::Command::new("oxide-analyzer")
-            .arg(workspace)
             .spawn()
             .unwrap()
             .wait()
