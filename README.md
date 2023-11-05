@@ -31,6 +31,8 @@ To use (and develop) the vscode extension:
 2. Start debugging the extension by pressing `F5`.
 3. A new vscode will open. You should open an Oxide project in that window.
 
+# Oxide Proposal
+
 ### Your Feedback Matters
 
 Oxide is a personal project that takes inspiration from the principles discussed
