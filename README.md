@@ -18,7 +18,7 @@ To contribute:
 To use the Oxide binaries:
 1. run `cargo build --release`.
 2. Add `target/release` to the `Path` environment variable (on Windows).
-3. Open a terminal and run a command using (e.g. `oxide analyzer`).
+3. Open a terminal and run a command (e.g. `oxide analyzer`).
 
 To use (and develop) the vscode extension:
 1. Open `editors/vscode` in it's own vscode window.
