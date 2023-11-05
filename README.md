@@ -1,6 +1,6 @@
 # Prototype
 
-The main development branch is currently the "prototype" branch.
+The main development branch is the [prototype](https://github.com/NoahGav/oxide-lang/tree/prototype) branch.
 
 # Oxide: A Proposal for a New Rust-Inspired Language
 
