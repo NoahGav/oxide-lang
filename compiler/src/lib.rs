@@ -70,10 +70,10 @@ pub struct Snapshot {
 #[salsa::input]
 pub struct SourceFile {
     #[return_ref]
-    pub text: String,
+    pub text: Vec<u16>,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
     pub line: usize,
     pub character: usize,
@@ -112,7 +112,7 @@ impl Compiler {
             if let Ok(entry) = entry {
                 if let Some("ox") = entry.path().extension().and_then(|ext| ext.to_str()) {
                     let text = std::fs::read_to_string(entry.path()).unwrap();
-                    let source = SourceFile::new(db.deref(), text);
+                    let source = SourceFile::new(db.deref(), text.encode_utf16().collect());
 
                     self.files.insert(entry.path().into(), source);
                 }
@@ -138,9 +138,11 @@ impl Compiler {
         let source = self.files.get(&path);
 
         if let Some(source) = source {
-            source.set_text(self.db.write().deref_mut()).to(text.into());
+            source
+                .set_text(self.db.write().deref_mut())
+                .to(text.encode_utf16().collect());
         } else {
-            let source = SourceFile::new(self.db.read().deref(), text.into());
+            let source = SourceFile::new(self.db.read().deref(), text.encode_utf16().collect());
             self.files.insert(path.clone(), source);
         }
     }
@@ -151,7 +153,52 @@ impl Compiler {
         // If the file is not "open", panic.
         assert!(self.open_files.contains(&path));
 
-        // TODO: Update the file using range and new_text.
+        let mut db = self.db.write();
+        let source = self.files.get(&path).unwrap();
+        let text = source.text(db.deref());
+
+        let mut pos = Position::default();
+        let mut offset = 0;
+        let mut start_offset = 0;
+        let mut end_offset = 0;
+        let mut start_set = false;
+        let mut end_set = false;
+
+        for char in text.iter() {
+            let char = unsafe { char::from_u32_unchecked(*char as u32) };
+
+            if range.start == pos {
+                start_offset = offset;
+                start_set = true;
+            }
+
+            if range.end == pos {
+                end_offset = offset;
+                end_set = true;
+            }
+
+            if char == '\n' {
+                pos.line += 1;
+                pos.character = 0;
+            } else {
+                pos.character += 1;
+            }
+
+            offset += 1;
+        }
+
+        if !start_set {
+            start_offset = offset;
+        }
+
+        if !end_set {
+            end_offset = offset;
+        }
+
+        let mut changed_text = text.clone();
+        changed_text.splice(start_offset..end_offset, new_text.encode_utf16());
+
+        source.set_text(db.deref_mut()).to(changed_text);
     }
 
     /// Closes a previously "open" file in the editor. When a file is closed, the compiler
@@ -168,7 +215,9 @@ impl Compiler {
 
         if let Ok(text) = text {
             let source = self.files.get(&path).unwrap();
-            source.set_text(self.db.write().deref_mut()).to(text);
+            source
+                .set_text(self.db.write().deref_mut())
+                .to(text.encode_utf16().collect());
         } else {
             self.files.remove(&path);
         }
@@ -202,9 +251,13 @@ impl Compiler {
                     let source = self.files.get(path);
 
                     if let Some(source) = source {
-                        source.set_text(self.db.write().deref_mut()).to(text);
+                        source
+                            .set_text(self.db.write().deref_mut())
+                            .to(text.encode_utf16().collect());
                     } else {
-                        let source = SourceFile::new(self.db.read().deref(), text);
+                        let source =
+                            SourceFile::new(self.db.read().deref(), text.encode_utf16().collect());
+
                         self.files.insert(path.clone(), source);
                     }
                 }
