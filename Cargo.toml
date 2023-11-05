@@ -1,0 +1,13 @@
+[package]
+name = "oxide-lang"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = ["compiler"]
+
+[dependencies]
+compiler = { path = "compiler" }
+clap = { version = "4.4.7", features = ["cargo"] }
+tokio = { version = "1.33.0", features = ["full"] }
+tower-lsp = "0.20.0"
