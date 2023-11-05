@@ -1,3 +1,7 @@
+# Prototype
+
+The main development branch is currently the "prototype" branch.
+
 # Oxide: A Proposal for a New Rust-Inspired Language
 
 ### Your Feedback Matters
