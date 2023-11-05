@@ -1,7 +1,15 @@
-use crate::SourceFile;
+#[salsa::input]
+pub struct SourceFile {
+    #[return_ref]
+    pub text: Vec<u16>,
+}
 
 #[salsa::tracked]
-pub fn parse(db: &dyn crate::Db, source: SourceFile) {
-    let text = String::from_utf16(source.text(db)).unwrap();
-    println!("{}", text);
+pub struct ParsedFile {}
+
+#[salsa::tracked]
+pub fn parse(db: &dyn crate::Db, source: SourceFile) -> ParsedFile {
+    let _text = source.text(db);
+
+    ParsedFile::new(db)
 }

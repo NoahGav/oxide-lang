@@ -16,6 +16,7 @@ use notify::{Error, Event, ReadDirectoryChangesWatcher, RecursiveMode, Watcher};
 
 pub use jar::*;
 use parking_lot::RwLock;
+pub use parser::*;
 use salsa::ParallelDatabase;
 use walkdir::WalkDir;
 
@@ -65,12 +66,6 @@ pub enum Block {
 pub struct Snapshot {
     db: salsa::Snapshot<db::Database>,
     files: DashMap<PathBuf, SourceFile>,
-}
-
-#[salsa::input]
-pub struct SourceFile {
-    #[return_ref]
-    pub text: Vec<u16>,
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
