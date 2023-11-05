@@ -61,7 +61,24 @@ impl LanguageServer for Backend {
             )
             .await;
 
-        // TODO: Use COMPILER.change_file(...);
+        let change = &params.content_changes[0];
+        let range = change.range.unwrap();
+
+        let start = compiler::Position {
+            line: range.start.line as usize,
+            character: range.start.character as usize,
+        };
+
+        let end = compiler::Position {
+            line: range.end.line as usize,
+            character: range.end.character as usize,
+        };
+
+        COMPILER.change_file(
+            params.text_document.uri.to_file_path().unwrap(),
+            start..end,
+            &change.text,
+        );
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {

@@ -5,7 +5,7 @@
 // TODO: only compare the parts we are interested in and not the span.
 
 use std::{
-    ops::{Deref, DerefMut},
+    ops::{Deref, DerefMut, Range},
     path::PathBuf,
     sync::{Arc, OnceLock},
 };
@@ -71,6 +71,12 @@ pub struct Snapshot {
 pub struct SourceFile {
     #[return_ref]
     pub text: String,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub struct Position {
+    pub line: usize,
+    pub character: usize,
 }
 
 impl Compiler {
@@ -139,18 +145,33 @@ impl Compiler {
         }
     }
 
-    // pub fn change_file(&self, path: impl Into<PathBuf>) {
-    //     TODO: If the file is not "open", panic.
-    //     TODO: This should incrementally update the file.
-    // }
+    pub fn change_file(&self, path: impl Into<PathBuf>, range: Range<Position>, new_text: &str) {
+        let path = path.into();
+
+        // If the file is not "open", panic.
+        assert!(self.open_files.contains(&path));
+
+        // TODO: Update the file using range and new_text.
+    }
 
     /// Closes a previously "open" file in the editor. When a file is closed, the compiler
     /// will revert to listening to file system events for it. The compiler will no longer
     /// rely on events from the `change_file` method to track modifications to the file.
     pub fn close_file(&self, path: impl Into<PathBuf>) {
-        self.open_files.remove(&path.into());
-        // TODO: Resync with the filesystem (if the file still exists, get it's text,
-        // TODO: if not, remove the file).
+        let path = path.into();
+
+        self.open_files.remove(&path);
+
+        // Resync with the filesystem (if the file still exists, get it's text,
+        // if not, remove the file).
+        let text = std::fs::read_to_string(path.clone());
+
+        if let Ok(text) = text {
+            let source = self.files.get(&path).unwrap();
+            source.set_text(self.db.write().deref_mut()).to(text);
+        } else {
+            self.files.remove(&path);
+        }
     }
 
     fn watch_event(&self, event: Result<Event, Error>) {
