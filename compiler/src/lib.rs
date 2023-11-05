@@ -33,6 +33,7 @@ pub struct Compiler {
     files: DashMap<PathBuf, SourceFile>,
     watcher: OnceLock<Option<ReadDirectoryChangesWatcher>>,
     open_files: DashSet<PathBuf>,
+    initialized: OnceLock<bool>,
 }
 
 unsafe impl Sync for Compiler {}
@@ -81,6 +82,7 @@ impl Compiler {
             files: DashMap::new(),
             watcher: OnceLock::new(),
             open_files: DashSet::new(),
+            initialized: OnceLock::new(),
         }
     }
 
@@ -113,9 +115,20 @@ impl Compiler {
                 }
             }
         });
+
+        self.initialized.set(true).unwrap();
+    }
+
+    /// Panics if the compiler is not initialized.
+    fn check_initialized(&self) {
+        self.initialized
+            .get()
+            .expect("Compiler has not been initialized.");
     }
 
     pub fn snapshot(self: &Arc<Self>) -> Snapshot {
+        self.check_initialized();
+
         Snapshot {
             db: self.db.read().deref().snapshot(),
             files: self.files.clone(),
@@ -126,6 +139,8 @@ impl Compiler {
     /// will not listen to file system events for it. Instead, it will rely on events generated
     /// by the `change_file` method to track modifications to the file.
     pub fn open_file(&self, path: impl Into<PathBuf>, text: &str) {
+        self.check_initialized();
+
         let path = path.into();
 
         self.open_files.insert(path.clone());
@@ -143,6 +158,8 @@ impl Compiler {
     }
 
     pub fn change_file(&self, path: impl Into<PathBuf>, range: Range<Position>, new_text: &str) {
+        self.check_initialized();
+
         let path = path.into();
 
         // If the file is not "open", panic.
@@ -200,6 +217,8 @@ impl Compiler {
     /// will revert to listening to file system events for it. The compiler will no longer
     /// rely on events from the `change_file` method to track modifications to the file.
     pub fn close_file(&self, path: impl Into<PathBuf>) {
+        self.check_initialized();
+
         let path = path.into();
 
         self.open_files.remove(&path);
@@ -278,9 +297,13 @@ impl Compiler {
 }
 
 impl Snapshot {
-    pub fn parse(&self, path: impl Into<PathBuf>) {
+    pub fn parse(&self, path: impl Into<PathBuf>) -> ParsedFile {
         let source = self.files.get(&path.into()).unwrap();
 
-        parser::parse(self.db.deref(), *source);
+        parser::parse(self.db.deref(), *source)
+    }
+
+    pub fn foo(&self, parsed: ParsedFile) -> String {
+        parsed.foo(self.db.deref()).clone()
     }
 }
