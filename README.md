@@ -31,3 +31,16 @@ To use (and develop) the vscode extension:
 2. Start debugging the extension by pressing `F5`.
 3. A new vscode window will open. You should open an Oxide project in that
    window.
+
+# Language Specification
+
+The Oxide language is currently in its prototype stage, and its design is a work
+in progress. This section of the README.md serves as a comprehensive repository
+of information regarding the language, encompassing high-level goals, features,
+language design (including syntax, semantics, and code generation), tooling, and
+any other relevant aspects. As the language evolves, we encourage contributors
+to actively update this documentation to reflect design decisions and
+improvements made by the community. When you make contributions to the language,
+please ensure that you modify this section accordingly to keep everyone informed
+about the latest developments. Your input is essential in shaping the future of
+Oxide.
