@@ -5,6 +5,10 @@
 The main development branch is the
 [prototype](https://github.com/NoahGav/oxide-lang/tree/prototype) branch.
 
+Since this is a prototype, expect many breaking changes to the api (code),
+specification, and language itself. Don't expect anything to be usable until the
+prototype is finished.
+
 ### Contributions
 
 To contribute:
